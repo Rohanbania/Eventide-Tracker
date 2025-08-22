@@ -15,8 +15,8 @@ import { Star, MessageSquare, DollarSign } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 const formSchema = z.object({
-  notes: z.string().min(10, 'Expense notes should be at least 10 characters long.'),
-  rating: z.number().min(1).max(5),
+  notes: z.string().optional(),
+  rating: z.number().min(1, 'Rating is required.').max(5),
   amount: z.coerce.number().positive('Amount must be a positive number.'),
 });
 
@@ -50,7 +50,7 @@ export function ExpenseTracker({ event }: { event: Event }) {
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    addExpense(event.id, values.notes, values.rating, values.amount);
+    addExpense(event.id, values.notes || '', values.rating, values.amount);
     form.reset({ notes: '', rating: 0, amount: 0 });
   };
 
@@ -86,7 +86,7 @@ export function ExpenseTracker({ event }: { event: Event }) {
                   name="notes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Notes</FormLabel>
+                      <FormLabel>Notes (Optional)</FormLabel>
                       <FormControl>
                         <Textarea placeholder="e.g., Booth rental fee" {...field} rows={4} />
                       </FormControl>
@@ -126,8 +126,8 @@ export function ExpenseTracker({ event }: { event: Event }) {
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start gap-4">
                     <div className="flex-grow">
-                      <p className="text-card-foreground pr-4">{exp.notes}</p>
-                       <p className="text-xs text-muted-foreground mt-2">
+                      {exp.notes && <p className="text-card-foreground pr-4">{exp.notes}</p>}
+                       <p className={`text-xs text-muted-foreground ${exp.notes ? 'mt-2' : ''}`}>
                         {formatDistanceToNow(new Date(exp.createdAt), { addSuffix: true })}
                       </p>
                     </div>
