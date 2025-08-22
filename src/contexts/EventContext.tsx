@@ -13,7 +13,7 @@ interface EventContextType {
   events: Event[];
   loading: boolean;
   getEventById: (id: string) => Event | undefined;
-  addEvent: (name: string, date: string) => Promise<void>;
+  addEvent: (name: string, date: string, description?: string) => Promise<void>;
   addExpense: (eventId: string, notes: string, amount: number) => Promise<void>;
   addIncome: (eventId: string, source: string, amount: number) => Promise<void>;
   generateExpenseSummary: (eventId: string) => Promise<void>;
@@ -55,13 +55,14 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     return events.find(event => event.id === id);
   }, [events]);
 
-  const addEvent = async (name: string, date: string) => {
+  const addEvent = async (name: string, date: string, description?: string) => {
     if (!user) return;
     try {
       await addDoc(collection(db, "events"), {
         userId: user.uid,
         name,
         date,
+        description,
         expenses: [],
         incomes: [],
         createdAt: Timestamp.now(),

@@ -19,6 +19,7 @@ export interface Event {
   userId: string;
   name: string;
   date: string;
+  description?: string;
   expenses: Expense[];
   incomes: Income[];
   expenseSummary?: string;

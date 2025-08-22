@@ -25,6 +25,7 @@ import { Input } from '@/components/ui/input';
 import { PlusCircle } from 'lucide-react';
 import { useEvents } from '@/contexts/EventContext';
 import { useState } from 'react';
+import { Textarea } from './ui/textarea';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -33,6 +34,7 @@ const formSchema = z.object({
   date: z.string().refine((val) => !isNaN(Date.parse(val)), {
     message: 'Please enter a valid date.',
   }),
+  description: z.string().optional(),
 });
 
 export function CreateEventDialog() {
@@ -44,11 +46,12 @@ export function CreateEventDialog() {
     defaultValues: {
       name: '',
       date: new Date().toISOString().split('T')[0],
+      description: '',
     },
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    addEvent(values.name, values.date);
+    addEvent(values.name, values.date, values.description);
     form.reset();
     setOpen(false);
   }
@@ -90,6 +93,19 @@ export function CreateEventDialog() {
                   <FormLabel>Event Date</FormLabel>
                   <FormControl>
                     <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description (Optional)</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Describe your event..." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

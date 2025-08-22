@@ -44,6 +44,9 @@ export default function EventDetailPage() {
           <Calendar className="w-5 h-5" />
           {format(parseISO(event.date), 'EEEE, MMMM d, yyyy')}
         </p>
+        {event.description && (
+          <p className="text-md text-foreground/80 mt-4 max-w-2xl">{event.description}</p>
+        )}
       </div>
 
       <Tabs defaultValue="expenses" className="w-full">
@@ -53,7 +56,7 @@ export default function EventDetailPage() {
           </TabsTrigger>
           <TabsTrigger value="income">
             <DollarSign className="w-4 h-4 mr-2" /> Income
-          </TabsTrigger>
+          </Tabs.ITrigger>
           <TabsTrigger value="reports">
             <BarChart2 className="w-4 h-4 mr-2" /> Reports
           </TabsTrigger>
