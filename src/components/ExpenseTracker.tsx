@@ -31,7 +31,7 @@ export function ExpenseTracker({ event }: { event: Event }) {
     defaultValues: { notes: '', amount: 0, createdAt: new Date() },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>>) => {
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
     addExpense(event.id, values.notes || '', values.amount, values.createdAt.toISOString());
     form.reset({ notes: '', amount: 0, createdAt: new Date() });
   };
