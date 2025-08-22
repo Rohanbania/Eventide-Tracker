@@ -56,7 +56,7 @@ export default function EventDetailPage() {
           </TabsTrigger>
           <TabsTrigger value="income">
             <DollarSign className="w-4 h-4 mr-2" /> Income
-          </Tabs.ITrigger>
+          </TabsTrigger>
           <TabsTrigger value="reports">
             <BarChart2 className="w-4 h-4 mr-2" /> Reports
           </TabsTrigger>
