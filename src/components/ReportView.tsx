@@ -54,6 +54,7 @@ export function ReportView({ event }: { event: Event }) {
         styles: { fontSize: 12, fontStyle: 'bold' },
     });
 
+    let splitSummary: string[] = [];
     // AI Summary
     if (event.expenseSummary) {
       doc.setFontSize(14);
@@ -62,7 +63,7 @@ export function ReportView({ event }: { event: Event }) {
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(0);
-      const splitSummary = doc.splitTextToSize(event.expenseSummary, 180);
+      splitSummary = doc.splitTextToSize(event.expenseSummary, 180);
       doc.text(splitSummary, 14, (doc as any).lastAutoTable.finalY + 22);
     }
     
