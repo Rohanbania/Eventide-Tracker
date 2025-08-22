@@ -74,9 +74,9 @@ export function ReportView({ event }: { event: Event }) {
     doc.text('Income Breakdown', 14, incomeY);
     autoTable(doc, {
       startY: incomeY + 2,
-      head: [['Source', 'Date', 'Amount']],
-      body: event.incomes.map(i => [i.source, format(new Date(i.createdAt), 'MMM d, yyyy'), `₹${i.amount.toFixed(2)}`]),
-      foot: [['Total Income', '', `₹${totalIncome.toFixed(2)}`]],
+      head: [['Source', 'Date', 'Type', 'Amount']],
+      body: event.incomes.map(i => [i.source, format(new Date(i.createdAt), 'MMM d, yyyy'), i.transactionType, `₹${i.amount.toFixed(2)}`]),
+      foot: [['Total Income', '', '', `₹${totalIncome.toFixed(2)}`]],
       headStyles: { fillColor: [30, 30, 30] },
       footStyles: { fontStyle: 'bold', fillColor: [230, 230, 230], textColor: 0 },
     });
@@ -87,9 +87,9 @@ export function ReportView({ event }: { event: Event }) {
     doc.text('Expense Breakdown', 14, (doc as any).lastAutoTable.finalY + 15);
     autoTable(doc, {
       startY: (doc as any).lastAutoTable.finalY + 17,
-      head: [['Notes', 'Created At', 'Amount']],
-      body: event.expenses.map(e => [e.notes, format(new Date(e.createdAt), 'MMM d, yyyy, h:mm a'), `₹${e.amount.toFixed(2)}`]),
-      foot: [['Total Expenses', '', `₹${totalExpenses.toFixed(2)}`]],
+      head: [['Notes', 'Created At', 'Type', 'Amount']],
+      body: event.expenses.map(e => [e.notes, format(new Date(e.createdAt), 'MMM d, yyyy'), e.transactionType, `₹${e.amount.toFixed(2)}`]),
+      foot: [['Total Expenses', '', '', `₹${totalExpenses.toFixed(2)}`]],
       headStyles: { fillColor: [30, 30, 30] },
       footStyles: { fontStyle: 'bold', fillColor: [230, 230, 230], textColor: 0 },
     });
