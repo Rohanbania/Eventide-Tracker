@@ -5,7 +5,7 @@ import { useEvents } from '@/contexts/EventContext';
 import type { Event } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Sparkles, BarChart2, FileText, DollarSign } from 'lucide-react';
+import { Sparkles, BarChart2, FileText, DollarSign, Wallet } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChartContainer, ChartConfig, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts"
@@ -28,6 +28,8 @@ export function ReportView({ event }: { event: Event }) {
   };
 
   const totalIncome = event.incomes.reduce((sum, income) => sum + income.amount, 0);
+  const totalExpenses = event.expenses.reduce((sum, expense) => sum + expense.amount, 0);
+  const netProfit = totalIncome - totalExpenses;
 
   const chartData = event.incomes.map(income => ({
     source: income.source,
@@ -36,6 +38,48 @@ export function ReportView({ event }: { event: Event }) {
 
   return (
     <div className="space-y-8">
+       <div className="grid md:grid-cols-3 gap-8">
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-headline flex items-center gap-2">
+              <DollarSign className="w-6 h-6 text-green-500" />
+              Total Income
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-4xl font-bold font-mono text-primary-foreground/90">
+              ${totalIncome.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-headline flex items-center gap-2">
+              <DollarSign className="w-6 h-6 text-red-500" />
+              Total Expenses
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-4xl font-bold font-mono text-destructive/90">
+              ${totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+          </CardContent>
+        </Card>
+         <Card>
+          <CardHeader>
+            <CardTitle className="font-headline flex items-center gap-2">
+              <Wallet className={`w-6 h-6 ${netProfit >= 0 ? 'text-blue-500' : 'text-orange-500'}`} />
+              Net Profit
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className={`text-4xl font-bold font-mono ${netProfit >= 0 ? 'text-primary-foreground/90' : 'text-destructive/90'}`}>
+              ${netProfit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle className="font-headline flex items-center gap-2">
@@ -67,54 +111,36 @@ export function ReportView({ event }: { event: Event }) {
         </CardContent>
       </Card>
       
-      <div className="grid md:grid-cols-3 gap-8">
-        <Card className="md:col-span-1">
-          <CardHeader>
-            <CardTitle className="font-headline flex items-center gap-2">
-              <DollarSign className="w-6 h-6 text-green-500" />
-              Total Income
-            </CardTitle>
-            <CardDescription>The total revenue generated from this event.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-5xl font-bold font-mono text-primary-foreground/90">
-              ${totalIncome.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle className="font-headline flex items-center gap-2">
-              <BarChart2 className="w-6 h-6 text-accent" />
-              Income Breakdown
-            </CardTitle>
-            <CardDescription>A visual breakdown of income by source.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {chartData.length > 0 ? (
-              <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
-                <BarChart accessibilityLayer data={chartData}>
-                  <CartesianGrid vertical={false} />
-                  <XAxis
-                    dataKey="source"
-                    tickLine={false}
-                    tickMargin={10}
-                    axisLine={false}
-                    tickFormatter={(value) => value.slice(0, 10) + (value.length > 10 ? '...' : '')}
-                  />
-                   <YAxis tickFormatter={(value) => `$${value}`} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="amount" fill="var(--color-amount)" radius={4} />
-                </BarChart>
-              </ChartContainer>
-            ) : (
-              <p className="text-muted-foreground text-center py-8">No income data to display.</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-headline flex items-center gap-2">
+            <BarChart2 className="w-6 h-6 text-accent" />
+            Income Breakdown
+          </CardTitle>
+          <CardDescription>A visual breakdown of income by source.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {chartData.length > 0 ? (
+            <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+              <BarChart accessibilityLayer data={chartData}>
+                <CartesianGrid vertical={false} />
+                <XAxis
+                  dataKey="source"
+                  tickLine={false}
+                  tickMargin={10}
+                  axisLine={false}
+                  tickFormatter={(value) => value.slice(0, 10) + (value.length > 10 ? '...' : '')}
+                />
+                  <YAxis tickFormatter={(value) => `$${value}`} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="amount" fill="var(--color-amount)" radius={4} />
+              </BarChart>
+            </ChartContainer>
+          ) : (
+            <p className="text-muted-foreground text-center py-8">No income data to display.</p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
