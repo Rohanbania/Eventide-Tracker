@@ -3,10 +3,10 @@ import { format, parseISO } from 'date-fns';
 import { ArrowRight, Calendar, IndianRupee, Wallet } from 'lucide-react';
 import type { Event } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AddExpenseSheet } from './AddExpenseSheet';
 import { AddIncomeSheet } from './AddIncomeSheet';
+import { Separator } from './ui/separator';
 
 interface EventCardProps {
   event: Event;
@@ -42,7 +42,10 @@ export function EventCard({ event }: EventCardProps) {
             </div>
             <span className="font-mono font-medium text-base">₹{totalExpenses.toLocaleString('en-IN')}</span>
           </div>
-           <div className="flex justify-between items-center text-sm font-semibold">
+          <div className="pt-2">
+            <Separator />
+          </div>
+           <div className="flex justify-between items-center text-sm font-semibold pt-1">
             <div className="flex items-center gap-2 text-muted-foreground">
                <Wallet className={`w-4 h-4 ${balance >= 0 ? 'text-blue-500' : 'text-orange-500'}`} />
               <span>Balance</span>
