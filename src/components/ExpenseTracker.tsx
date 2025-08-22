@@ -10,8 +10,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { MessageSquare } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption, TableFooter } from '@/components/ui/table';
+import { IndianRupee } from 'lucide-react';
+import { format } from 'date-fns';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
+import { Calendar as CalendarIcon } from 'lucide-react';
 
 const formSchema = z.object({
   notes: z.string().optional(),
@@ -26,10 +31,12 @@ export function ExpenseTracker({ event }: { event: Event }) {
     defaultValues: { notes: '', amount: 0, createdAt: new Date() },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = (values: z.infer<typeof formSchema>>) => {
     addExpense(event.id, values.notes || '', values.amount, values.createdAt.toISOString());
     form.reset({ notes: '', amount: 0, createdAt: new Date() });
   };
+  
+  const totalExpenses = event.expenses.reduce((sum, expense) => sum + expense.amount, 0);
 
   return (
     <div className="grid md:grid-cols-3 gap-8">
@@ -37,7 +44,7 @@ export function ExpenseTracker({ event }: { event: Event }) {
         <Card>
           <CardHeader>
             <CardTitle className="font-headline">Record Expense</CardTitle>
-            <CardDescription>Add a new note or observation about this event.</CardDescription>
+            <CardDescription>Add a new expense for this event.</CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
@@ -58,6 +65,47 @@ export function ExpenseTracker({ event }: { event: Event }) {
                     </FormItem>
                   )}
                 />
+                 <FormField
+                  control={form.control}
+                  name="createdAt"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) =>
+                              date > new Date() || date < new Date("1900-01-01")
+                            }
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField
                   control={form.control}
                   name="notes"
@@ -65,7 +113,7 @@ export function ExpenseTracker({ event }: { event: Event }) {
                     <FormItem>
                       <FormLabel>Notes (Optional)</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="e.g., Booth rental fee" {...field} rows={4} />
+                        <Textarea placeholder="e.g., Booth rental fee" {...field} rows={3} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -81,31 +129,35 @@ export function ExpenseTracker({ event }: { event: Event }) {
       </div>
       <div className="md:col-span-2">
         <h3 className="text-2xl font-headline mb-4 flex items-center gap-2">
-          <MessageSquare className="w-6 h-6" /> Recorded Expenses
+            <IndianRupee className="w-6 h-6" /> Expense Entries
         </h3>
-        <div className="space-y-4">
-          {event.expenses.length > 0 ? (
-            event.expenses.map((exp) => (
-              <Card key={exp.id} className="animate-in fade-in-0">
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start gap-4">
-                    <div className="flex-grow">
-                      {exp.notes && <p className="text-card-foreground pr-4">{exp.notes}</p>}
-                       <p className={`text-xs text-muted-foreground ${exp.notes ? 'mt-2' : ''}`}>
-                        {formatDistanceToNow(new Date(exp.createdAt), { addSuffix: true })}
-                      </p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="font-mono text-lg font-semibold text-destructive/80">₹{exp.amount.toFixed(2)}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <p className="text-muted-foreground py-8 text-center">No expenses recorded yet.</p>
-          )}
-        </div>
+        <Card>
+          <Table>
+            {event.expenses.length === 0 && <TableCaption>No expenses recorded yet.</TableCaption>}
+            <TableHeader>
+              <TableRow>
+                <TableHead>Notes</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {event.expenses.map((expense) => (
+                <TableRow key={expense.id} className="animate-in fade-in-0">
+                  <TableCell className="font-medium max-w-[200px] truncate">{expense.notes || '-'}</TableCell>
+                  <TableCell className="text-muted-foreground">{format(new Date(expense.createdAt), 'MMM d, yyyy')}</TableCell>
+                  <TableCell className="text-right font-mono text-destructive/80">₹{expense.amount.toFixed(2)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+            <TableFooter>
+                <TableRow>
+                    <TableCell colSpan={2} className="font-bold text-lg">Total Expenses</TableCell>
+                    <TableCell className="text-right font-bold font-mono text-lg text-destructive/80">₹{totalExpenses.toFixed(2)}</TableCell>
+                </TableRow>
+            </TableFooter>
+          </Table>
+        </Card>
       </div>
     </div>
   );
