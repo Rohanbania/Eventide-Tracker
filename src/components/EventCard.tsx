@@ -27,27 +27,27 @@ export function EventCard({ event }: EventCardProps) {
             {format(parseISO(event.date), 'MMMM d, yyyy')}
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex-grow space-y-4">
-          <div className="flex items-center gap-4 text-sm">
+        <CardContent className="flex-grow space-y-3">
+          <div className="flex justify-between items-center text-sm">
             <div className="flex items-center gap-2 text-muted-foreground">
               <IndianRupee className="w-4 h-4 text-green-500" />
               <span>Total Income</span>
             </div>
-            <Badge variant="secondary" className="font-mono text-base">₹{totalIncome.toLocaleString('en-IN')}</Badge>
+            <span className="font-mono font-medium text-base">₹{totalIncome.toLocaleString('en-IN')}</span>
           </div>
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex justify-between items-center text-sm">
             <div className="flex items-center gap-2 text-muted-foreground">
               <IndianRupee className="w-4 h-4 text-red-500" />
               <span>Total Expenses</span>
             </div>
-            <Badge variant="secondary" className="font-mono text-base">₹{totalExpenses.toLocaleString('en-IN')}</Badge>
+            <span className="font-mono font-medium text-base">₹{totalExpenses.toLocaleString('en-IN')}</span>
           </div>
-           <div className="flex items-center gap-4 text-sm">
+           <div className="flex justify-between items-center text-sm font-semibold">
             <div className="flex items-center gap-2 text-muted-foreground">
                <Wallet className={`w-4 h-4 ${balance >= 0 ? 'text-blue-500' : 'text-orange-500'}`} />
               <span>Balance</span>
             </div>
-            <Badge variant="secondary" className="font-mono text-base">₹{balance.toLocaleString('en-IN')}</Badge>
+            <span className="font-mono text-base">₹{balance.toLocaleString('en-IN')}</span>
           </div>
         </CardContent>
        </Link>
