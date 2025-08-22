@@ -4,6 +4,9 @@ import { ArrowRight, Calendar, DollarSign, MessageSquare } from 'lucide-react';
 import type { Event } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { AddExpenseSheet } from './AddExpenseSheet';
+import { AddIncomeSheet } from './AddIncomeSheet';
 
 interface EventCardProps {
   event: Event;
@@ -13,8 +16,8 @@ export function EventCard({ event }: EventCardProps) {
   const totalIncome = event.incomes.reduce((acc, income) => acc + income.amount, 0);
 
   return (
-    <Link href={`/events/${event.id}`} className="block group">
-      <Card className="h-full flex flex-col transition-all duration-300 hover:shadow-primary/20 hover:shadow-lg hover:-translate-y-1">
+    <Card className="h-full flex flex-col transition-all duration-300 hover:shadow-primary/20 hover:shadow-lg">
+       <Link href={`/events/${event.id}`} className="block group flex-grow">
         <CardHeader>
           <CardTitle className="font-headline text-2xl tracking-wide">{event.name}</CardTitle>
           <CardDescription className="flex items-center gap-2 pt-1">
@@ -38,13 +41,23 @@ export function EventCard({ event }: EventCardProps) {
             <Badge variant="secondary" className="font-mono text-base">{event.expenses.length}</Badge>
           </div>
         </CardContent>
-        <CardFooter>
-          <div className="flex items-center text-sm font-semibold text-primary-foreground/80 group-hover:text-accent-foreground">
-            View Details
-            <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
-          </div>
-        </CardFooter>
-      </Card>
-    </Link>
+       </Link>
+      <CardFooter className="flex-col items-stretch space-y-2">
+         <Link href={`/events/${event.id}`} className="block group">
+            <div className="flex items-center text-sm font-semibold text-primary-foreground/80 group-hover:text-accent-foreground">
+                View Details
+                <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
+            </div>
+         </Link>
+         <div className="flex gap-2 pt-2 border-t">
+            <AddExpenseSheet event={event}>
+                <Button variant="outline" size="sm" className="w-full">Add Expense</Button>
+            </AddExpenseSheet>
+            <AddIncomeSheet event={event}>
+                <Button variant="outline" size="sm" className="w-full">Add Income</Button>
+            </AddIncomeSheet>
+         </div>
+      </CardFooter>
+    </Card>
   );
 }
