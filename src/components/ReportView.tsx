@@ -5,10 +5,13 @@ import { useEvents } from '@/contexts/EventContext';
 import type { Event } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Sparkles, BarChart2, FileText, DollarSign, Wallet } from 'lucide-react';
+import { Sparkles, BarChart2, FileText, DollarSign, Wallet, Download } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChartContainer, ChartConfig, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts"
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { format } from 'date-fns';
 
 const chartConfig = {
   amount: {
@@ -26,6 +29,72 @@ export function ReportView({ event }: { event: Event }) {
     await generateExpenseSummary(event.id);
     setIsLoading(false);
   };
+  
+  const handleDownloadPdf = () => {
+    const doc = new jsPDF();
+    const totalIncome = event.incomes.reduce((sum, income) => sum + income.amount, 0);
+    const totalExpenses = event.expenses.reduce((sum, expense) => sum + expense.amount, 0);
+    const netProfit = totalIncome - totalExpenses;
+
+    // Title
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(22);
+    doc.text(`Report for ${event.name}`, 14, 22);
+    doc.setFontSize(12);
+    doc.setTextColor(100);
+    doc.text(`Date: ${format(new Date(event.date), 'MMMM d, yyyy')}`, 14, 30);
+    
+    // Summary Cards
+    autoTable(doc, {
+        startY: 35,
+        body: [
+            [`Total Income: $${totalIncome.toFixed(2)}`, `Total Expenses: $${totalExpenses.toFixed(2)}`, `Net Profit: $${netProfit.toFixed(2)}`],
+        ],
+        theme: 'plain',
+        styles: { fontSize: 12, fontStyle: 'bold' },
+    });
+
+    // AI Summary
+    if (event.expenseSummary) {
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('AI Expense Summary', 14, (doc as any).lastAutoTable.finalY + 15);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(0);
+      const splitSummary = doc.splitTextToSize(event.expenseSummary, 180);
+      doc.text(splitSummary, 14, (doc as any).lastAutoTable.finalY + 22);
+    }
+    
+    // Income Table
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    const incomeY = event.expenseSummary ? (doc as any).lastAutoTable.finalY + 22 + (splitSummary.length * 5) + 10 : (doc as any).lastAutoTable.finalY + 15;
+    doc.text('Income Breakdown', 14, incomeY);
+    autoTable(doc, {
+      startY: incomeY + 2,
+      head: [['Source', 'Date', 'Amount']],
+      body: event.incomes.map(i => [i.source, format(new Date(i.date), 'MMM d, yyyy'), `$${i.amount.toFixed(2)}`]),
+      foot: [['Total Income', '', `$${totalIncome.toFixed(2)}`]],
+      headStyles: { fillColor: [30, 30, 30] },
+      footStyles: { fontStyle: 'bold', fillColor: [230, 230, 230], textColor: 0 },
+    });
+
+    // Expense Table
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Expense Breakdown', 14, (doc as any).lastAutoTable.finalY + 15);
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 17,
+      head: [['Notes', 'Created At', 'Amount']],
+      body: event.expenses.map(e => [e.notes, format(new Date(e.createdAt), 'MMM d, yyyy, h:mm a'), `$${e.amount.toFixed(2)}`]),
+      foot: [['Total Expenses', '', `$${totalExpenses.toFixed(2)}`]],
+      headStyles: { fillColor: [30, 30, 30] },
+      footStyles: { fontStyle: 'bold', fillColor: [230, 230, 230], textColor: 0 },
+    });
+
+    doc.save(`report-${event.name.toLowerCase().replace(/ /g, '-')}.pdf`);
+  };
 
   const totalIncome = event.incomes.reduce((sum, income) => sum + income.amount, 0);
   const totalExpenses = event.expenses.reduce((sum, expense) => sum + expense.amount, 0);
@@ -38,6 +107,12 @@ export function ReportView({ event }: { event: Event }) {
 
   return (
     <div className="space-y-8">
+       <div className="flex justify-end">
+            <Button onClick={handleDownloadPdf}>
+                <Download className="w-4 h-4 mr-2" />
+                Download PDF
+            </Button>
+        </div>
        <div className="grid md:grid-cols-3 gap-8">
         <Card>
           <CardHeader>
