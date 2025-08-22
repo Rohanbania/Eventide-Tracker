@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import { collection, addDoc, query, where, onSnapshot, doc, updateDoc, orderBy } from 'firebase/firestore';
-import type { Event, Expense, Income } from '@/lib/types';
+import type { Event, Expense, Income, TransactionType } from '@/lib/types';
 import { summarizeExpense } from '@/ai/flows/summarize-expense';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './AuthContext';
@@ -14,8 +14,8 @@ interface EventContextType {
   loading: boolean;
   getEventById: (id: string) => Event | undefined;
   addEvent: (name: string, date: string, description?: string) => Promise<void>;
-  addExpense: (eventId: string, notes: string, amount: number, createdAt: string) => Promise<void>;
-  addIncome: (eventId: string, source: string, amount: number, createdAt: string) => Promise<void>;
+  addExpense: (eventId: string, notes: string, amount: number, createdAt: string, transactionType: TransactionType) => Promise<void>;
+  addIncome: (eventId: string, source: string, amount: number, createdAt: string, transactionType: TransactionType) => Promise<void>;
   generateExpenseSummary: (eventId: string) => Promise<void>;
 }
 
@@ -77,7 +77,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const addExpense = async (eventId: string, notes: string, amount: number, createdAt: string) => {
+  const addExpense = async (eventId: string, notes: string, amount: number, createdAt: string, transactionType: TransactionType) => {
     const event = getEventById(eventId);
     if (!event) return;
 
@@ -86,6 +86,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       notes,
       amount,
       createdAt,
+      transactionType,
     };
     
     try {
@@ -99,7 +100,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const addIncome = async (eventId: string, source: string, amount: number, createdAt: string) => {
+  const addIncome = async (eventId: string, source: string, amount: number, createdAt: string, transactionType: TransactionType) => {
     const event = getEventById(eventId);
     if (!event) return;
     
@@ -108,6 +109,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       source,
       amount,
       createdAt,
+      transactionType,
     };
 
     try {

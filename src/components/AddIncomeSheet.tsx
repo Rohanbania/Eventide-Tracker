@@ -15,11 +15,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { Calendar as CalendarIcon } from "lucide-react"
+import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 
 const formSchema = z.object({
   source: z.string().min(2, 'Source must be at least 2 characters.'),
   amount: z.coerce.number().positive('Amount must be a positive number.'),
   createdAt: z.date(),
+  transactionType: z.enum(['Cash', 'Bank']),
 });
 
 interface AddIncomeSheetProps {
@@ -33,12 +35,12 @@ export function AddIncomeSheet({ event, children }: AddIncomeSheetProps) {
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { source: '', amount: 0, createdAt: new Date() },
+    defaultValues: { source: '', amount: 0, createdAt: new Date(), transactionType: 'Cash' },
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    addIncome(event.id, values.source, values.amount, values.createdAt.toISOString());
-    form.reset({ source: '', amount: 0, createdAt: new Date() });
+    addIncome(event.id, values.source, values.amount, values.createdAt.toISOString(), values.transactionType);
+    form.reset({ source: '', amount: 0, createdAt: new Date(), transactionType: 'Cash' });
     setOpen(false);
   };
 
@@ -52,6 +54,36 @@ export function AddIncomeSheet({ event, children }: AddIncomeSheetProps) {
         </SheetHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-8">
+            <FormField
+              control={form.control}
+              name="transactionType"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>Transaction Type</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex space-x-4"
+                    >
+                      <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="Cash" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Cash</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="Bank" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Bank</FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="source"

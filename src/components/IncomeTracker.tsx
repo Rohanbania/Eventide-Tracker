@@ -16,23 +16,26 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { Calendar as CalendarIcon } from "lucide-react"
+import { RadioGroup, RadioGroupItem } from './ui/radio-group';
+import { Badge } from './ui/badge';
 
 const formSchema = z.object({
   source: z.string().min(2, 'Source must be at least 2 characters.'),
   amount: z.coerce.number().positive('Amount must be a positive number.'),
   createdAt: z.date(),
+  transactionType: z.enum(['Cash', 'Bank']),
 });
 
 export function IncomeTracker({ event }: { event: Event }) {
   const { addIncome } = useEvents();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { source: '', amount: 0, createdAt: new Date() },
+    defaultValues: { source: '', amount: 0, createdAt: new Date(), transactionType: 'Cash' },
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    addIncome(event.id, values.source, values.amount, values.createdAt.toISOString());
-    form.reset({ source: '', amount: 0, createdAt: new Date() });
+    addIncome(event.id, values.source, values.amount, values.createdAt.toISOString(), values.transactionType);
+    form.reset({ source: '', amount: 0, createdAt: new Date(), transactionType: 'Cash' });
   };
   
   const totalIncome = event.incomes.reduce((sum, income) => sum + income.amount, 0);
@@ -48,6 +51,36 @@ export function IncomeTracker({ event }: { event: Event }) {
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="transactionType"
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel>Transaction Type</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          className="flex space-x-4"
+                        >
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="Cash" />
+                            </FormControl>
+                            <FormLabel className="font-normal">Cash</FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="Bank" />
+                            </FormControl>
+                            <FormLabel className="font-normal">Bank</FormLabel>
+                          </FormItem>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField
                   control={form.control}
                   name="source"
@@ -136,6 +169,7 @@ export function IncomeTracker({ event }: { event: Event }) {
             <TableHeader>
               <TableRow>
                 <TableHead>Source</TableHead>
+                <TableHead>Type</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead className="text-right">Amount</TableHead>
               </TableRow>
@@ -144,6 +178,11 @@ export function IncomeTracker({ event }: { event: Event }) {
               {event.incomes.map((income) => (
                 <TableRow key={income.id} className="animate-in fade-in-0">
                   <TableCell className="font-medium">{income.source}</TableCell>
+                  <TableCell>
+                    <Badge variant={income.transactionType === 'Bank' ? 'secondary' : 'outline'}>
+                      {income.transactionType}
+                    </Badge>
+                  </TableCell>
                   <TableCell className="text-muted-foreground">{format(new Date(income.createdAt), 'MMM d, yyyy')}</TableCell>
                   <TableCell className="text-right font-mono">₹{income.amount.toFixed(2)}</TableCell>
                 </TableRow>
@@ -151,7 +190,7 @@ export function IncomeTracker({ event }: { event: Event }) {
             </TableBody>
             <TableFooter>
                 <TableRow>
-                    <TableCell colSpan={2} className="font-bold text-lg">Total Income</TableCell>
+                    <TableCell colSpan={3} className="font-bold text-lg">Total Income</TableCell>
                     <TableCell className="text-right font-bold font-mono text-lg">₹{totalIncome.toFixed(2)}</TableCell>
                 </TableRow>
             </TableFooter>

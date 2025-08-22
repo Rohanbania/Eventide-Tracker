@@ -17,23 +17,26 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { Calendar as CalendarIcon } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from './ui/radio-group';
+import { Badge } from './ui/badge';
 
 const formSchema = z.object({
   notes: z.string().optional(),
   amount: z.coerce.number().positive('Amount must be a positive number.'),
   createdAt: z.date(),
+  transactionType: z.enum(['Cash', 'Bank']),
 });
 
 export function ExpenseTracker({ event }: { event: Event }) {
   const { addExpense } = useEvents();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { notes: '', amount: 0, createdAt: new Date() },
+    defaultValues: { notes: '', amount: 0, createdAt: new Date(), transactionType: 'Cash' },
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    addExpense(event.id, values.notes || '', values.amount, values.createdAt.toISOString());
-    form.reset({ notes: '', amount: 0, createdAt: new Date() });
+    addExpense(event.id, values.notes || '', values.amount, values.createdAt.toISOString(), values.transactionType);
+    form.reset({ notes: '', amount: 0, createdAt: new Date(), transactionType: 'Cash' });
   };
   
   const totalExpenses = event.expenses.reduce((sum, expense) => sum + expense.amount, 0);
@@ -49,6 +52,36 @@ export function ExpenseTracker({ event }: { event: Event }) {
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="transactionType"
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel>Transaction Type</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          className="flex space-x-4"
+                        >
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="Cash" />
+                            </FormControl>
+                            <FormLabel className="font-normal">Cash</FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="Bank" />
+                            </FormControl>
+                            <FormLabel className="font-normal">Bank</FormLabel>
+                          </FormItem>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField
                   control={form.control}
                   name="amount"
@@ -137,6 +170,7 @@ export function ExpenseTracker({ event }: { event: Event }) {
             <TableHeader>
               <TableRow>
                 <TableHead>Notes</TableHead>
+                <TableHead>Type</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead className="text-right">Amount</TableHead>
               </TableRow>
@@ -145,6 +179,11 @@ export function ExpenseTracker({ event }: { event: Event }) {
               {event.expenses.map((expense) => (
                 <TableRow key={expense.id} className="animate-in fade-in-0">
                   <TableCell className="font-medium max-w-[200px] truncate">{expense.notes || '-'}</TableCell>
+                   <TableCell>
+                    <Badge variant={expense.transactionType === 'Bank' ? 'secondary' : 'outline'}>
+                      {expense.transactionType}
+                    </Badge>
+                  </TableCell>
                   <TableCell className="text-muted-foreground">{format(new Date(expense.createdAt), 'MMM d, yyyy')}</TableCell>
                   <TableCell className="text-right font-mono text-destructive/80">₹{expense.amount.toFixed(2)}</TableCell>
                 </TableRow>
@@ -152,7 +191,7 @@ export function ExpenseTracker({ event }: { event: Event }) {
             </TableBody>
             <TableFooter>
                 <TableRow>
-                    <TableCell colSpan={2} className="font-bold text-lg">Total Expenses</TableCell>
+                    <TableCell colSpan={3} className="font-bold text-lg">Total Expenses</TableCell>
                     <TableCell className="text-right font-bold font-mono text-lg text-destructive/80">₹{totalExpenses.toFixed(2)}</TableCell>
                 </TableRow>
             </TableFooter>

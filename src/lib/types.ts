@@ -1,10 +1,13 @@
 import { Timestamp } from "firebase/firestore";
 
+export type TransactionType = 'Cash' | 'Bank';
+
 export interface Income {
   id: string;
   source: string;
   amount: number;
   createdAt: string;
+  transactionType: TransactionType;
 }
 
 export interface Expense {
@@ -12,6 +15,7 @@ export interface Expense {
   notes: string;
   amount: number;
   createdAt: string;
+  transactionType: TransactionType;
 }
 
 export interface Event {

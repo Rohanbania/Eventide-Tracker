@@ -16,11 +16,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { Calendar as CalendarIcon } from "lucide-react"
+import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 
 const formSchema = z.object({
   notes: z.string().optional(),
   amount: z.coerce.number().positive('Amount must be a positive number.'),
   createdAt: z.date(),
+  transactionType: z.enum(['Cash', 'Bank']),
 });
 
 interface AddExpenseSheetProps {
@@ -34,12 +36,12 @@ export function AddExpenseSheet({ event, children }: AddExpenseSheetProps) {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { notes: '', amount: 0, createdAt: new Date() },
+    defaultValues: { notes: '', amount: 0, createdAt: new Date(), transactionType: 'Cash' },
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    addExpense(event.id, values.notes || '', values.amount, values.createdAt.toISOString());
-    form.reset({ notes: '', amount: 0, createdAt: new Date() });
+    addExpense(event.id, values.notes || '', values.amount, values.createdAt.toISOString(), values.transactionType);
+    form.reset({ notes: '', amount: 0, createdAt: new Date(), transactionType: 'Cash' });
     setOpen(false);
   };
 
@@ -53,6 +55,36 @@ export function AddExpenseSheet({ event, children }: AddExpenseSheetProps) {
         </SheetHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-8">
+             <FormField
+              control={form.control}
+              name="transactionType"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>Transaction Type</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex space-x-4"
+                    >
+                      <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="Cash" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Cash</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="Bank" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Bank</FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="amount"
