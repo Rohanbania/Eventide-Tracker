@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { format, parseISO } from 'date-fns';
-import { ArrowRight, Calendar, IndianRupee } from 'lucide-react';
+import { ArrowRight, Calendar, IndianRupee, Wallet } from 'lucide-react';
 import type { Event } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +15,7 @@ interface EventCardProps {
 export function EventCard({ event }: EventCardProps) {
   const totalIncome = event.incomes.reduce((acc, income) => acc + income.amount, 0);
   const totalExpenses = event.expenses.reduce((acc, expense) => acc + expense.amount, 0);
+  const balance = totalIncome - totalExpenses;
 
   return (
     <Card className="h-full flex flex-col transition-all duration-300 hover:shadow-primary/20 hover:shadow-lg">
@@ -40,6 +41,13 @@ export function EventCard({ event }: EventCardProps) {
               <span>Total Expenses</span>
             </div>
             <Badge variant="secondary" className="font-mono text-base">₹{totalExpenses.toLocaleString('en-IN')}</Badge>
+          </div>
+           <div className="flex items-center gap-4 text-sm">
+            <div className="flex items-center gap-2 text-muted-foreground">
+               <Wallet className={`w-4 h-4 ${balance >= 0 ? 'text-blue-500' : 'text-orange-500'}`} />
+              <span>Balance</span>
+            </div>
+            <Badge variant="secondary" className="font-mono text-base">₹{balance.toLocaleString('en-IN')}</Badge>
           </div>
         </CardContent>
        </Link>
