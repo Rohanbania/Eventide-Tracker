@@ -35,6 +35,7 @@ export function ReportView({ event }: { event: Event }) {
     const totalIncome = event.incomes.reduce((sum, income) => sum + income.amount, 0);
     const totalExpenses = event.expenses.reduce((sum, expense) => sum + expense.amount, 0);
     const netProfit = totalIncome - totalExpenses;
+    let splitSummary: string[] = [];
 
     // Title
     doc.setFont('helvetica', 'bold');
@@ -54,7 +55,6 @@ export function ReportView({ event }: { event: Event }) {
         styles: { fontSize: 12, fontStyle: 'bold' },
     });
 
-    let splitSummary: string[] = [];
     // AI Summary
     if (event.expenseSummary) {
       doc.setFontSize(14);
