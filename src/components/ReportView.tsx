@@ -13,6 +13,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts"
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
+import { logoBase64 } from '@/lib/logo';
 
 const chartConfig = {
   amount: {
@@ -36,82 +37,91 @@ export function ReportView({ event }: { event: Event }) {
     const totalIncome = event.incomes.reduce((sum, income) => sum + income.amount, 0);
     const totalExpenses = event.expenses.reduce((sum, expense) => sum + expense.amount, 0);
     const netProfit = totalIncome - totalExpenses;
-    let splitSummary: string[] = [];
-    const tableTheme = 'grid';
-    const headStyles = { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold' };
-    const footStyles = { fillColor: [236, 240, 241], textColor: 44, fontStyle: 'bold' };
-
-    // Title
+    let finalY = 0;
+    
+    // Header with Logo
+    doc.addImage(logoBase64, 'PNG', 14, 15, 12, 12);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(24);
+    doc.setFontSize(22);
     doc.setTextColor(44, 62, 80);
-    doc.text("Eventide Tracker", 105, 20, { align: 'center' });
+    doc.text("Eventide Tracker", 30, 22);
+
+    // Report Title
     doc.setFontSize(16);
-    doc.setTextColor(44, 62, 80);
-    doc.text(`Financial Report for: ${event.name}`, 105, 30, { align: 'center' });
+    doc.text(`Financial Report: ${event.name}`, 14, 40);
     doc.setFontSize(12);
     doc.setTextColor(127, 140, 141);
-    doc.text(`Event Date: ${format(new Date(event.date), 'MMMM d, yyyy')}`, 105, 38, { align: 'center' });
-    
+    doc.text(`Event Date: ${format(new Date(event.date), 'MMMM d, yyyy')}`, 14, 48);
+
+    finalY = 55;
+
     // Summary Cards
     autoTable(doc, {
-        startY: 48,
-        body: [
-            [`Total Income: ₹${totalIncome.toFixed(2)}`, `Total Expenses: ₹${totalExpenses.toFixed(2)}`, `Net Profit: ₹${netProfit.toFixed(2)}`],
-        ],
-        theme: 'plain',
-        styles: { fontSize: 12, fontStyle: 'bold', halign: 'center' },
+      startY: finalY,
+      body: [[
+        { content: `Total Income\n₹${totalIncome.toFixed(2)}`, styles: { halign: 'center', fontStyle: 'bold' } },
+        { content: `Total Expenses\n₹${totalExpenses.toFixed(2)}`, styles: { halign: 'center', fontStyle: 'bold' } },
+        { content: `Net Profit\n₹${netProfit.toFixed(2)}`, styles: { halign: 'center', fontStyle: 'bold' } },
+      ]],
+      theme: 'grid',
+      styles: {
+        fontSize: 10,
+        cellPadding: 5,
+        fillColor: [245, 245, 245],
+        textColor: 44,
+      }
     });
+
+    finalY = (doc as any).lastAutoTable.finalY + 15;
 
     // AI Summary
     if (event.expenseSummary) {
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
-      doc.text('AI Expense Summary', 14, (doc as any).lastAutoTable.finalY + 15);
+      doc.text('AI Expense Summary', 14, finalY);
+      finalY += 7;
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(0);
-      splitSummary = doc.splitTextToSize(event.expenseSummary, 180);
-      doc.text(splitSummary, 14, (doc as any).lastAutoTable.finalY + 22);
+      const splitSummary = doc.splitTextToSize(event.expenseSummary, 180);
+      doc.text(splitSummary, 14, finalY);
+      finalY += (splitSummary.length * 5) + 10;
     }
+
+    const tableConfig = {
+      theme: 'grid',
+      headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold' },
+      footStyles: { fillColor: [236, 240, 241], textColor: 44, fontStyle: 'bold' },
+      didDrawPage: (data: any) => {
+        doc.setFontSize(10);
+        doc.setTextColor(127, 140, 141);
+        doc.text(`Page ${doc.internal.getNumberOfPages()}`, data.settings.margin.left, doc.internal.pageSize.height - 10);
+      }
+    };
     
     // Income Table
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    const incomeY = event.expenseSummary ? (doc as any).lastAutoTable.finalY + 22 + (splitSummary.length * 5) + 10 : (doc as any).lastAutoTable.finalY + 15;
-    doc.text('Income Breakdown', 14, incomeY);
+    doc.text('Income Breakdown', 14, finalY);
     autoTable(doc, {
-      startY: incomeY + 2,
+      ...tableConfig,
+      startY: finalY + 2,
       head: [['Source', 'Date', 'Type', 'Amount']],
       body: event.incomes.map(i => [i.source, format(new Date(i.createdAt), 'MMM d, yyyy'), i.transactionType, `₹${i.amount.toFixed(2)}`]),
       foot: [['Total Income', '', '', `₹${totalIncome.toFixed(2)}`]],
-      theme: tableTheme,
-      headStyles,
-      footStyles,
-      didDrawPage: (data) => {
-        doc.setFontSize(10);
-        doc.setTextColor(127, 140, 141);
-        doc.text(`Page ${doc.internal.getNumberOfPages()}`, data.settings.margin.left, doc.internal.pageSize.height - 10);
-      }
     });
+    finalY = (doc as any).lastAutoTable.finalY + 15;
 
     // Expense Table
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('Expense Breakdown', 14, (doc as any).lastAutoTable.finalY + 15);
+    doc.text('Expense Breakdown', 14, finalY);
     autoTable(doc, {
-      startY: (doc as any).lastAutoTable.finalY + 17,
+      ...tableConfig,
+      startY: finalY + 2,
       head: [['Notes', 'Created At', 'Type', 'Amount']],
       body: event.expenses.map(e => [e.notes || '-', format(new Date(e.createdAt), 'MMM d, yyyy'), e.transactionType, `₹${e.amount.toFixed(2)}`]),
       foot: [['Total Expenses', '', '', `₹${totalExpenses.toFixed(2)}`]],
-      theme: tableTheme,
-      headStyles,
-      footStyles,
-      didDrawPage: (data) => {
-        doc.setFontSize(10);
-        doc.setTextColor(127, 140, 141);
-        doc.text(`Page ${doc.internal.getNumberOfPages()}`, data.settings.margin.left, doc.internal.pageSize.height - 10);
-      }
     });
 
     doc.save(`report-${event.name.toLowerCase().replace(/ /g, '-')}.pdf`);
