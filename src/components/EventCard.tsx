@@ -33,9 +33,9 @@ export function EventCard({ event }: EventCardProps) {
           <div className="flex items-center gap-4 text-sm">
             <div className="flex items-center gap-2 text-muted-foreground">
               <MessageSquare className="w-4 h-4 text-blue-500" />
-              <span>Experiences</span>
+              <span>Expenses</span>
             </div>
-            <Badge variant="secondary" className="font-mono text-base">{event.experiences.length}</Badge>
+            <Badge variant="secondary" className="font-mono text-base">{event.expenses.length}</Badge>
           </div>
         </CardContent>
         <CardFooter>

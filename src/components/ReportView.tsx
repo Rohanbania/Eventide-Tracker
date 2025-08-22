@@ -18,12 +18,12 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export function ReportView({ event }: { event: Event }) {
-  const { generateExperienceSummary } = useEvents();
+  const { generateExpenseSummary } = useEvents();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleGenerateSummary = async () => {
     setIsLoading(true);
-    await generateExperienceSummary(event.id);
+    await generateExpenseSummary(event.id);
     setIsLoading(false);
   };
 
@@ -40,10 +40,10 @@ export function ReportView({ event }: { event: Event }) {
         <CardHeader>
           <CardTitle className="font-headline flex items-center gap-2">
             <FileText className="w-6 h-6 text-accent" />
-            Experience Summary
+            Expense Summary
           </CardTitle>
           <CardDescription>
-            An AI-generated summary of your recorded experiences and key takeaways.
+            An AI-generated summary of your recorded expenses and key takeaways.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -53,14 +53,14 @@ export function ReportView({ event }: { event: Event }) {
               <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-3/4" />
             </div>
-          ) : event.experienceSummary ? (
+          ) : event.expenseSummary ? (
             <p className="text-card-foreground/90 whitespace-pre-wrap leading-relaxed">
-              {event.experienceSummary}
+              {event.expenseSummary}
             </p>
           ) : (
-             <p className="text-muted-foreground">No summary generated yet. Add some experiences and click the button to create one.</p>
+             <p className="text-muted-foreground">No summary generated yet. Add some expenses and click the button to create one.</p>
           )}
-           <Button onClick={handleGenerateSummary} disabled={isLoading || event.experiences.length === 0} className="mt-4">
+           <Button onClick={handleGenerateSummary} disabled={isLoading || event.expenses.length === 0} className="mt-4">
             <Sparkles className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             {isLoading ? 'Generating...' : 'Generate AI Summary'}
           </Button>

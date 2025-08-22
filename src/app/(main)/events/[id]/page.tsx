@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import { useEvents } from '@/contexts/EventContext';
-import { ExperienceTracker } from '@/components/ExperienceTracker';
+import { ExpenseTracker } from '@/components/ExpenseTracker';
 import { IncomeTracker } from '@/components/IncomeTracker';
 import { ReportView } from '@/components/ReportView';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -39,10 +39,10 @@ export default function EventDetailPage() {
         </p>
       </div>
 
-      <Tabs defaultValue="experiences" className="w-full">
+      <Tabs defaultValue="expenses" className="w-full">
         <TabsList className="grid w-full grid-cols-3 md:w-fit md:grid-cols-3 mb-6">
-          <TabsTrigger value="experiences">
-            <NotebookText className="w-4 h-4 mr-2" /> Experiences
+          <TabsTrigger value="expenses">
+            <NotebookText className="w-4 h-4 mr-2" /> Expenses
           </TabsTrigger>
           <TabsTrigger value="income">
             <DollarSign className="w-4 h-4 mr-2" /> Income
@@ -51,8 +51,8 @@ export default function EventDetailPage() {
             <BarChart2 className="w-4 h-4 mr-2" /> Reports
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="experiences">
-          <ExperienceTracker event={event} />
+        <TabsContent value="expenses">
+          <ExpenseTracker event={event} />
         </TabsContent>
         <TabsContent value="income">
           <IncomeTracker event={event} />

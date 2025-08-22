@@ -1,8 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
-import type { Event, Experience, Income } from '@/lib/types';
-import { summarizeExperience } from '@/ai/flows/summarize-experience';
+import type { Event, Expense, Income } from '@/lib/types';
+import { summarizeExpense } from '@/ai/flows/summarize-expense';
 import { useToast } from '@/hooks/use-toast';
 
 // Mock Data
@@ -11,7 +11,7 @@ const initialEvents: Event[] = [
     id: '1',
     name: 'Art Fair Booth',
     date: '2024-08-15',
-    experiences: [
+    expenses: [
       { id: 'exp1', notes: 'Great foot traffic in the morning. People loved the new landscape series.', rating: 5, createdAt: '2024-08-15T10:00:00Z' },
       { id: 'exp2', notes: 'Afternoon was slower. The corner spot might not be ideal. Consider a central location next time.', rating: 3, createdAt: '2024-08-15T14:30:00Z' },
     ],
@@ -19,13 +19,13 @@ const initialEvents: Event[] = [
       { id: 'inc1', source: 'Painting Sale "Sunset"', amount: 450, date: '2024-08-15' },
       { id: 'inc2', source: 'Print Sales', amount: 120, date: '2024-08-15' },
     ],
-    experienceSummary: 'The Art Fair Booth event had strong morning engagement, particularly with the new landscape series. However, the afternoon saw a decline in foot traffic, suggesting that the booth\'s corner location may have been a contributing factor. For future events, securing a more central spot could be beneficial for maintaining consistent visitor flow throughout the day.'
+    expenseSummary: 'The Art Fair Booth event had strong morning engagement, particularly with the new landscape series. However, the afternoon saw a decline in foot traffic, suggesting that the booth\'s corner location may have been a contributing factor. For future events, securing a more central spot could be beneficial for maintaining consistent visitor flow throughout the day.'
   },
   {
     id: '2',
     name: 'Local Music Gig',
     date: '2024-07-20',
-    experiences: [
+    expenses: [
       { id: 'exp3', notes: 'The crowd was really into the new songs. Sound system was a bit muddy during the first set.', rating: 4, createdAt: '2024-07-20T21:00:00Z' },
     ],
     incomes: [
@@ -40,9 +40,9 @@ interface EventContextType {
   events: Event[];
   getEventById: (id: string) => Event | undefined;
   addEvent: (name: string, date: string) => void;
-  addExperience: (eventId: string, notes: string, rating: number) => void;
+  addExpense: (eventId: string, notes: string, rating: number) => void;
   addIncome: (eventId: string, source: string, amount: number) => void;
-  generateExperienceSummary: (eventId: string) => Promise<void>;
+  generateExpenseSummary: (eventId: string) => Promise<void>;
 }
 
 const EventContext = createContext<EventContextType | undefined>(undefined);
@@ -60,7 +60,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       id: (Math.random() * 1000000).toString(),
       name,
       date,
-      experiences: [],
+      expenses: [],
       incomes: [],
     };
     setEvents(prevEvents => [newEvent, ...prevEvents]);
@@ -70,8 +70,8 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const addExperience = (eventId: string, notes: string, rating: number) => {
-    const newExperience: Experience = {
+  const addExpense = (eventId: string, notes: string, rating: number) => {
+    const newExpense: Expense = {
       id: (Math.random() * 1000000).toString(),
       notes,
       rating,
@@ -80,7 +80,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     setEvents(prevEvents =>
       prevEvents.map(event =>
         event.id === eventId
-          ? { ...event, experiences: [newExperience, ...event.experiences] }
+          ? { ...event, expenses: [newExpense, ...event.expenses] }
           : event
       )
     );
@@ -102,27 +102,27 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
-  const generateExperienceSummary = async (eventId: string) => {
+  const generateExpenseSummary = async (eventId: string) => {
     const event = getEventById(eventId);
-    if (!event || event.experiences.length === 0) {
+    if (!event || event.expenses.length === 0) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "No experiences to summarize.",
+        description: "No expenses to summarize.",
       });
       return;
     }
 
     try {
-      const allNotes = event.experiences.map(e => `- ${e.notes} (Rating: ${e.rating}/5)`).join('\n');
-      const result = await summarizeExperience({
+      const allNotes = event.expenses.map(e => `- ${e.notes} (Rating: ${e.rating}/5)`).join('\n');
+      const result = await summarizeExpense({
         eventName: event.name,
-        experienceNotes: allNotes,
+        expenseNotes: allNotes,
       });
 
       setEvents(prevEvents =>
         prevEvents.map(e =>
-          e.id === eventId ? { ...e, experienceSummary: result.summary } : e
+          e.id === eventId ? { ...e, expenseSummary: result.summary } : e
         )
       );
       toast({
@@ -143,9 +143,9 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     events,
     getEventById,
     addEvent,
-    addExperience,
+    addExpense,
     addIncome,
-    generateExperienceSummary,
+    generateExpenseSummary,
   };
 
   return <EventContext.Provider value={value}>{children}</EventContext.Provider>;

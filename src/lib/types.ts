@@ -5,7 +5,7 @@ export interface Income {
   date: string;
 }
 
-export interface Experience {
+export interface Expense {
   id: string;
   notes: string;
   rating: number;
@@ -16,7 +16,7 @@ export interface Event {
   id: string;
   name: string;
   date: string;
-  experiences: Experience[];
+  expenses: Expense[];
   incomes: Income[];
-  experienceSummary?: string;
+  expenseSummary?: string;
 }

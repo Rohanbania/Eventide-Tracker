@@ -14,7 +14,7 @@ import { Star, MessageSquare } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 const formSchema = z.object({
-  notes: z.string().min(10, 'Experience notes should be at least 10 characters long.'),
+  notes: z.string().min(10, 'Expense notes should be at least 10 characters long.'),
   rating: z.number().min(1).max(5),
 });
 
@@ -40,15 +40,15 @@ const RatingInput = ({ value, onChange }: { value: number; onChange: (value: num
   );
 };
 
-export function ExperienceTracker({ event }: { event: Event }) {
-  const { addExperience } = useEvents();
+export function ExpenseTracker({ event }: { event: Event }) {
+  const { addExpense } = useEvents();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: { notes: '', rating: 0 },
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    addExperience(event.id, values.notes, values.rating);
+    addExpense(event.id, values.notes, values.rating);
     form.reset({ notes: '', rating: 0 });
   };
 
@@ -57,7 +57,7 @@ export function ExperienceTracker({ event }: { event: Event }) {
       <div className="md:col-span-1">
         <Card>
           <CardHeader>
-            <CardTitle className="font-headline">Record Experience</CardTitle>
+            <CardTitle className="font-headline">Record Expense</CardTitle>
             <CardDescription>Add a new note or observation about this event.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -90,7 +90,7 @@ export function ExperienceTracker({ event }: { event: Event }) {
                   )}
                 />
                 <Button type="submit" className="w-full">
-                  Add Experience
+                  Add Expense
                 </Button>
               </form>
             </Form>
@@ -99,11 +99,11 @@ export function ExperienceTracker({ event }: { event: Event }) {
       </div>
       <div className="md:col-span-2">
         <h3 className="text-2xl font-headline mb-4 flex items-center gap-2">
-          <MessageSquare className="w-6 h-6" /> Recorded Experiences
+          <MessageSquare className="w-6 h-6" /> Recorded Expenses
         </h3>
         <div className="space-y-4">
-          {event.experiences.length > 0 ? (
-            event.experiences.map((exp) => (
+          {event.expenses.length > 0 ? (
+            event.expenses.map((exp) => (
               <Card key={exp.id} className="animate-in fade-in-0">
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start">
@@ -115,12 +115,12 @@ export function ExperienceTracker({ event }: { event: Event }) {
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
                     {formatDistanceToNow(new Date(exp.createdAt), { addSuffix: true })}
-                  </p>
+                  p>
                 </CardContent>
               </Card>
             ))
           ) : (
-            <p className="text-muted-foreground py-8 text-center">No experiences recorded yet.</p>
+            <p className="text-muted-foreground py-8 text-center">No expenses recorded yet.</p>
           )}
         </div>
       </div>
