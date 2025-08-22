@@ -14,8 +14,8 @@ interface EventContextType {
   loading: boolean;
   getEventById: (id: string) => Event | undefined;
   addEvent: (name: string, date: string, description?: string) => Promise<void>;
-  addExpense: (eventId: string, notes: string, amount: number) => Promise<void>;
-  addIncome: (eventId: string, source: string, amount: number) => Promise<void>;
+  addExpense: (eventId: string, notes: string, amount: number, createdAt: string) => Promise<void>;
+  addIncome: (eventId: string, source: string, amount: number, createdAt: string) => Promise<void>;
   generateExpenseSummary: (eventId: string) => Promise<void>;
 }
 
@@ -77,7 +77,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const addExpense = async (eventId: string, notes: string, amount: number) => {
+  const addExpense = async (eventId: string, notes: string, amount: number, createdAt: string) => {
     const event = getEventById(eventId);
     if (!event) return;
 
@@ -85,7 +85,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       id: (Math.random() * 1000000).toString(),
       notes,
       amount,
-      createdAt: new Date().toISOString(),
+      createdAt,
     };
     
     try {
@@ -99,7 +99,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const addIncome = async (eventId: string, source: string, amount: number) => {
+  const addIncome = async (eventId: string, source: string, amount: number, createdAt: string) => {
     const event = getEventById(eventId);
     if (!event) return;
     
@@ -107,7 +107,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       id: (Math.random() * 1000000).toString(),
       source,
       amount,
-      date: new Date().toISOString().split('T')[0],
+      createdAt,
     };
 
     try {

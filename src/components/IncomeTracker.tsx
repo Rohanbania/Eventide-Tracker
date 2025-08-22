@@ -12,22 +12,27 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption, TableFooter } from '@/components/ui/table';
 import { IndianRupee } from 'lucide-react';
 import { format } from 'date-fns';
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
+import { Calendar as CalendarIcon } from "lucide-react"
 
 const formSchema = z.object({
   source: z.string().min(2, 'Source must be at least 2 characters.'),
   amount: z.coerce.number().positive('Amount must be a positive number.'),
+  createdAt: z.date(),
 });
 
 export function IncomeTracker({ event }: { event: Event }) {
   const { addIncome } = useEvents();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { source: '', amount: 0 },
+    defaultValues: { source: '', amount: 0, createdAt: new Date() },
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    addIncome(event.id, values.source, values.amount);
-    form.reset({ source: '', amount: 0 });
+    addIncome(event.id, values.source, values.amount, values.createdAt.toISOString());
+    form.reset({ source: '', amount: 0, createdAt: new Date() });
   };
   
   const totalIncome = event.incomes.reduce((sum, income) => sum + income.amount, 0);
@@ -72,6 +77,47 @@ export function IncomeTracker({ event }: { event: Event }) {
                     </FormItem>
                   )}
                 />
+                 <FormField
+                  control={form.control}
+                  name="createdAt"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) =>
+                              date > new Date() || date < new Date("1900-01-01")
+                            }
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <Button type="submit" className="w-full">
                   Add Income
                 </Button>
@@ -98,7 +144,7 @@ export function IncomeTracker({ event }: { event: Event }) {
               {event.incomes.map((income) => (
                 <TableRow key={income.id} className="animate-in fade-in-0">
                   <TableCell className="font-medium">{income.source}</TableCell>
-                  <TableCell className="text-muted-foreground">{format(new Date(income.date), 'MMM d, yyyy')}</TableCell>
+                  <TableCell className="text-muted-foreground">{format(new Date(income.createdAt), 'MMM d, yyyy')}</TableCell>
                   <TableCell className="text-right font-mono">₹{income.amount.toFixed(2)}</TableCell>
                 </TableRow>
               ))}

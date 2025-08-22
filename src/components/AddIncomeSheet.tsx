@@ -10,10 +10,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetTrigger } from '@/components/ui/sheet';
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
+import { format } from "date-fns"
+import { Calendar as CalendarIcon } from "lucide-react"
 
 const formSchema = z.object({
   source: z.string().min(2, 'Source must be at least 2 characters.'),
   amount: z.coerce.number().positive('Amount must be a positive number.'),
+  createdAt: z.date(),
 });
 
 interface AddIncomeSheetProps {
@@ -27,12 +33,12 @@ export function AddIncomeSheet({ event, children }: AddIncomeSheetProps) {
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { source: '', amount: 0 },
+    defaultValues: { source: '', amount: 0, createdAt: new Date() },
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    addIncome(event.id, values.source, values.amount);
-    form.reset({ source: '', amount: 0 });
+    addIncome(event.id, values.source, values.amount, values.createdAt.toISOString());
+    form.reset({ source: '', amount: 0, createdAt: new Date() });
     setOpen(false);
   };
 
@@ -71,6 +77,47 @@ export function AddIncomeSheet({ event, children }: AddIncomeSheetProps) {
                        <Input type="number" step="0.01" placeholder="10000.00" className="pl-8" {...field} />
                     </div>
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="createdAt"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Date</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={(date) =>
+                          date > new Date() || date < new Date("1900-01-01")
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}

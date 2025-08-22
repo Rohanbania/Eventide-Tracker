@@ -16,18 +16,19 @@ import { formatDistanceToNow } from 'date-fns';
 const formSchema = z.object({
   notes: z.string().optional(),
   amount: z.coerce.number().positive('Amount must be a positive number.'),
+  createdAt: z.date(),
 });
 
 export function ExpenseTracker({ event }: { event: Event }) {
   const { addExpense } = useEvents();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { notes: '', amount: 0 },
+    defaultValues: { notes: '', amount: 0, createdAt: new Date() },
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    addExpense(event.id, values.notes || '', values.amount);
-    form.reset({ notes: '', amount: 0 });
+    addExpense(event.id, values.notes || '', values.amount, values.createdAt.toISOString());
+    form.reset({ notes: '', amount: 0, createdAt: new Date() });
   };
 
   return (

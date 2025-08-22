@@ -75,7 +75,7 @@ export function ReportView({ event }: { event: Event }) {
     autoTable(doc, {
       startY: incomeY + 2,
       head: [['Source', 'Date', 'Amount']],
-      body: event.incomes.map(i => [i.source, format(new Date(i.date), 'MMM d, yyyy'), `₹${i.amount.toFixed(2)}`]),
+      body: event.incomes.map(i => [i.source, format(new Date(i.createdAt), 'MMM d, yyyy'), `₹${i.amount.toFixed(2)}`]),
       foot: [['Total Income', '', `₹${totalIncome.toFixed(2)}`]],
       headStyles: { fillColor: [30, 30, 30] },
       footStyles: { fontStyle: 'bold', fillColor: [230, 230, 230], textColor: 0 },

@@ -4,7 +4,7 @@ export interface Income {
   id: string;
   source: string;
   amount: number;
-  date: string;
+  createdAt: string;
 }
 
 export interface Expense {
