@@ -8,7 +8,6 @@ export interface Income {
 export interface Expense {
   id: string;
   notes: string;
-  rating: number;
   amount: number;
   createdAt: string;
 }

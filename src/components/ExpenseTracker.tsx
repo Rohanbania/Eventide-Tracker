@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -11,47 +10,24 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Star, MessageSquare, DollarSign } from 'lucide-react';
+import { MessageSquare, DollarSign } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 const formSchema = z.object({
   notes: z.string().optional(),
-  rating: z.number().min(1, 'Rating is required.').max(5),
   amount: z.coerce.number().positive('Amount must be a positive number.'),
 });
-
-const RatingInput = ({ value, onChange }: { value: number; onChange: (value: number) => void }) => {
-  return (
-    <div className="flex items-center gap-1">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <button
-          type="button"
-          key={star}
-          onClick={() => onChange(star)}
-          className="p-1 focus:outline-none focus:ring-2 focus:ring-ring rounded-full"
-          aria-label={`Rate ${star} out of 5`}
-        >
-          <Star
-            className={`w-6 h-6 transition-colors ${
-              star <= value ? 'text-yellow-400 fill-yellow-400' : 'text-muted-foreground'
-            }`}
-          />
-        </button>
-      ))}
-    </div>
-  );
-};
 
 export function ExpenseTracker({ event }: { event: Event }) {
   const { addExpense } = useEvents();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { notes: '', rating: 0, amount: 0 },
+    defaultValues: { notes: '', amount: 0 },
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    addExpense(event.id, values.notes || '', values.rating, values.amount);
-    form.reset({ notes: '', rating: 0, amount: 0 });
+    addExpense(event.id, values.notes || '', values.amount);
+    form.reset({ notes: '', amount: 0 });
   };
 
   return (
@@ -94,19 +70,6 @@ export function ExpenseTracker({ event }: { event: Event }) {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="rating"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Overall Rating</FormLabel>
-                      <FormControl>
-                        <RatingInput value={field.value} onChange={field.onChange} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
                 <Button type="submit" className="w-full">
                   Add Expense
                 </Button>
@@ -133,10 +96,6 @@ export function ExpenseTracker({ event }: { event: Event }) {
                     </div>
                     <div className="text-right shrink-0">
                       <p className="font-mono text-lg font-semibold text-destructive/80">${exp.amount.toFixed(2)}</p>
-                      <div className="flex items-center gap-1 shrink-0 mt-1 justify-end">
-                        <span className="font-bold text-sm">{exp.rating}</span>
-                        <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                      </div>
                     </div>
                   </div>
                 </CardContent>

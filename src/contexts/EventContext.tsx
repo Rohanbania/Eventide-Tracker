@@ -12,8 +12,8 @@ const initialEvents: Event[] = [
     name: 'Art Fair Booth',
     date: '2024-08-15',
     expenses: [
-      { id: 'exp1', notes: 'Great foot traffic in the morning. People loved the new landscape series.', rating: 5, amount: 200, createdAt: '2024-08-15T10:00:00Z' },
-      { id: 'exp2', notes: 'Afternoon was slower. The corner spot might not be ideal. Consider a central location next time.', rating: 3, amount: 50, createdAt: '2024-08-15T14:30:00Z' },
+      { id: 'exp1', notes: 'Great foot traffic in the morning. People loved the new landscape series.', amount: 200, createdAt: '2024-08-15T10:00:00Z' },
+      { id: 'exp2', notes: 'Afternoon was slower. The corner spot might not be ideal. Consider a central location next time.', amount: 50, createdAt: '2024-08-15T14:30:00Z' },
     ],
     incomes: [
       { id: 'inc1', source: 'Painting Sale "Sunset"', amount: 450, date: '2024-08-15' },
@@ -26,7 +26,7 @@ const initialEvents: Event[] = [
     name: 'Local Music Gig',
     date: '2024-07-20',
     expenses: [
-      { id: 'exp3', notes: 'The crowd was really into the new songs. Sound system was a bit muddy during the first set.', rating: 4, amount: 150, createdAt: '2024-07-20T21:00:00Z' },
+      { id: 'exp3', notes: 'The crowd was really into the new songs. Sound system was a bit muddy during the first set.', amount: 150, createdAt: '2024-07-20T21:00:00Z' },
     ],
     incomes: [
       { id: 'inc3', source: 'Ticket Sales', amount: 800, date: '2024-07-20' },
@@ -40,7 +40,7 @@ interface EventContextType {
   events: Event[];
   getEventById: (id: string) => Event | undefined;
   addEvent: (name: string, date: string) => void;
-  addExpense: (eventId: string, notes: string, rating: number, amount: number) => void;
+  addExpense: (eventId: string, notes: string, amount: number) => void;
   addIncome: (eventId: string, source: string, amount: number) => void;
   generateExpenseSummary: (eventId: string) => Promise<void>;
 }
@@ -70,11 +70,10 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const addExpense = (eventId: string, notes: string, rating: number, amount: number) => {
+  const addExpense = (eventId: string, notes: string, amount: number) => {
     const newExpense: Expense = {
       id: (Math.random() * 1000000).toString(),
       notes,
-      rating,
       amount,
       createdAt: new Date().toISOString(),
     };
@@ -115,7 +114,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      const allNotes = event.expenses.map(e => `- ${e.notes} (Rating: ${e.rating}/5, Amount: $${e.amount})`).join('\n');
+      const allNotes = event.expenses.map(e => `- ${e.notes} (Amount: $${e.amount})`).join('\n');
       const result = await summarizeExpense({
         eventName: event.name,
         expenseNotes: allNotes,
