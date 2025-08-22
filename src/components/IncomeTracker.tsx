@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption, TableFooter } from '@/components/ui/table';
-import { DollarSign } from 'lucide-react';
+import { IndianRupee } from 'lucide-react';
 import { format } from 'date-fns';
 
 const formSchema = z.object({
@@ -64,8 +64,8 @@ export function IncomeTracker({ event }: { event: Event }) {
                       <FormLabel>Amount</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <DollarSign className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                          <Input type="number" step="0.01" placeholder="100.00" className="pl-8" {...field} />
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
+                          <Input type="number" step="0.01" placeholder="10000.00" className="pl-8" {...field} />
                         </div>
                       </FormControl>
                       <FormMessage />
@@ -82,7 +82,7 @@ export function IncomeTracker({ event }: { event: Event }) {
       </div>
       <div className="md:col-span-2">
         <h3 className="text-2xl font-headline mb-4 flex items-center gap-2">
-            <DollarSign className="w-6 h-6" /> Income Entries
+            <IndianRupee className="w-6 h-6" /> Income Entries
         </h3>
         <Card>
           <Table>
@@ -99,14 +99,14 @@ export function IncomeTracker({ event }: { event: Event }) {
                 <TableRow key={income.id} className="animate-in fade-in-0">
                   <TableCell className="font-medium">{income.source}</TableCell>
                   <TableCell className="text-muted-foreground">{format(new Date(income.date), 'MMM d, yyyy')}</TableCell>
-                  <TableCell className="text-right font-mono">${income.amount.toFixed(2)}</TableCell>
+                  <TableCell className="text-right font-mono">₹{income.amount.toFixed(2)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
             <TableFooter>
                 <TableRow>
                     <TableCell colSpan={2} className="font-bold text-lg">Total Income</TableCell>
-                    <TableCell className="text-right font-bold font-mono text-lg">${totalIncome.toFixed(2)}</TableCell>
+                    <TableCell className="text-right font-bold font-mono text-lg">₹{totalIncome.toFixed(2)}</TableCell>
                 </TableRow>
             </TableFooter>
           </Table>

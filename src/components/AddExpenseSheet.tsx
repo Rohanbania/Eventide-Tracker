@@ -11,7 +11,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetTrigger } from '@/components/ui/sheet';
-import { DollarSign } from 'lucide-react';
 
 const formSchema = z.object({
   notes: z.string().optional(),
@@ -56,8 +55,8 @@ export function AddExpenseSheet({ event, children }: AddExpenseSheetProps) {
                   <FormLabel>Amount</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <DollarSign className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                      <Input type="number" step="0.01" placeholder="50.00" className="pl-8" {...field} />
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
+                      <Input type="number" step="0.01" placeholder="5000.00" className="pl-8" {...field} />
                     </div>
                   </FormControl>
                   <FormMessage />

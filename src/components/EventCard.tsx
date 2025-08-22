@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { format, parseISO } from 'date-fns';
-import { ArrowRight, Calendar, DollarSign, MessageSquare } from 'lucide-react';
+import { ArrowRight, Calendar, MessageSquare, IndianRupee } from 'lucide-react';
 import type { Event } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -28,10 +28,10 @@ export function EventCard({ event }: EventCardProps) {
         <CardContent className="flex-grow space-y-4">
           <div className="flex items-center gap-4 text-sm">
             <div className="flex items-center gap-2 text-muted-foreground">
-              <DollarSign className="w-4 h-4 text-green-500" />
+              <IndianRupee className="w-4 h-4 text-green-500" />
               <span>Total Income</span>
             </div>
-            <Badge variant="secondary" className="font-mono text-base">${totalIncome.toLocaleString()}</Badge>
+            <Badge variant="secondary" className="font-mono text-base">₹{totalIncome.toLocaleString('en-IN')}</Badge>
           </div>
           <div className="flex items-center gap-4 text-sm">
             <div className="flex items-center gap-2 text-muted-foreground">

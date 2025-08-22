@@ -5,7 +5,7 @@ import { useEvents } from '@/contexts/EventContext';
 import type { Event } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Sparkles, BarChart2, FileText, DollarSign, Wallet, Download } from 'lucide-react';
+import { Sparkles, BarChart2, FileText, IndianRupee, Wallet, Download } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChartContainer, ChartConfig, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts"
@@ -49,7 +49,7 @@ export function ReportView({ event }: { event: Event }) {
     autoTable(doc, {
         startY: 35,
         body: [
-            [`Total Income: $${totalIncome.toFixed(2)}`, `Total Expenses: $${totalExpenses.toFixed(2)}`, `Net Profit: $${netProfit.toFixed(2)}`],
+            [`Total Income: ₹${totalIncome.toFixed(2)}`, `Total Expenses: ₹${totalExpenses.toFixed(2)}`, `Net Profit: ₹${netProfit.toFixed(2)}`],
         ],
         theme: 'plain',
         styles: { fontSize: 12, fontStyle: 'bold' },
@@ -75,8 +75,8 @@ export function ReportView({ event }: { event: Event }) {
     autoTable(doc, {
       startY: incomeY + 2,
       head: [['Source', 'Date', 'Amount']],
-      body: event.incomes.map(i => [i.source, format(new Date(i.date), 'MMM d, yyyy'), `$${i.amount.toFixed(2)}`]),
-      foot: [['Total Income', '', `$${totalIncome.toFixed(2)}`]],
+      body: event.incomes.map(i => [i.source, format(new Date(i.date), 'MMM d, yyyy'), `₹${i.amount.toFixed(2)}`]),
+      foot: [['Total Income', '', `₹${totalIncome.toFixed(2)}`]],
       headStyles: { fillColor: [30, 30, 30] },
       footStyles: { fontStyle: 'bold', fillColor: [230, 230, 230], textColor: 0 },
     });
@@ -88,8 +88,8 @@ export function ReportView({ event }: { event: Event }) {
     autoTable(doc, {
       startY: (doc as any).lastAutoTable.finalY + 17,
       head: [['Notes', 'Created At', 'Amount']],
-      body: event.expenses.map(e => [e.notes, format(new Date(e.createdAt), 'MMM d, yyyy, h:mm a'), `$${e.amount.toFixed(2)}`]),
-      foot: [['Total Expenses', '', `$${totalExpenses.toFixed(2)}`]],
+      body: event.expenses.map(e => [e.notes, format(new Date(e.createdAt), 'MMM d, yyyy, h:mm a'), `₹${e.amount.toFixed(2)}`]),
+      foot: [['Total Expenses', '', `₹${totalExpenses.toFixed(2)}`]],
       headStyles: { fillColor: [30, 30, 30] },
       footStyles: { fontStyle: 'bold', fillColor: [230, 230, 230], textColor: 0 },
     });
@@ -118,26 +118,26 @@ export function ReportView({ event }: { event: Event }) {
         <Card>
           <CardHeader>
             <CardTitle className="font-headline flex items-center gap-2">
-              <DollarSign className="w-6 h-6 text-green-500" />
+              <IndianRupee className="w-6 h-6 text-green-500" />
               Total Income
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-4xl font-bold font-mono text-primary-foreground/90">
-              ${totalIncome.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ₹{totalIncome.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
             <CardTitle className="font-headline flex items-center gap-2">
-              <DollarSign className="w-6 h-6 text-red-500" />
+              <IndianRupee className="w-6 h-6 text-red-500" />
               Total Expenses
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-4xl font-bold font-mono text-destructive/90">
-              ${totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ₹{totalExpenses.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </CardContent>
         </Card>
@@ -150,7 +150,7 @@ export function ReportView({ event }: { event: Event }) {
           </CardHeader>
           <CardContent>
             <p className={`text-4xl font-bold font-mono ${netProfit >= 0 ? 'text-primary-foreground/90' : 'text-destructive/90'}`}>
-              ${netProfit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ₹{netProfit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </CardContent>
         </Card>
@@ -207,7 +207,7 @@ export function ReportView({ event }: { event: Event }) {
                   axisLine={false}
                   tickFormatter={(value) => value.slice(0, 10) + (value.length > 10 ? '...' : '')}
                 />
-                  <YAxis tickFormatter={(value) => `$${value}`} />
+                  <YAxis tickFormatter={(value) => `₹${value}`} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar dataKey="amount" fill="var(--color-amount)" radius={4} />
               </BarChart>

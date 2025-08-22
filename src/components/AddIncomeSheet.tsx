@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetTrigger } from '@/components/ui/sheet';
-import { DollarSign } from 'lucide-react';
 
 const formSchema = z.object({
   source: z.string().min(2, 'Source must be at least 2 characters.'),
@@ -68,8 +67,8 @@ export function AddIncomeSheet({ event, children }: AddIncomeSheetProps) {
                   <FormLabel>Amount</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <DollarSign className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                      <Input type="number" step="0.01" placeholder="100.00" className="pl-8" {...field} />
+                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
+                       <Input type="number" step="0.01" placeholder="10000.00" className="pl-8" {...field} />
                     </div>
                   </FormControl>
                   <FormMessage />

@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { MessageSquare, DollarSign } from 'lucide-react';
+import { MessageSquare } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 const formSchema = z.object({
@@ -49,8 +49,8 @@ export function ExpenseTracker({ event }: { event: Event }) {
                       <FormLabel>Amount</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <DollarSign className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                          <Input type="number" step="0.01" placeholder="50.00" className="pl-8" {...field} />
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
+                          <Input type="number" step="0.01" placeholder="5000.00" className="pl-8" {...field} />
                         </div>
                       </FormControl>
                       <FormMessage />
@@ -95,7 +95,7 @@ export function ExpenseTracker({ event }: { event: Event }) {
                       </p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="font-mono text-lg font-semibold text-destructive/80">${exp.amount.toFixed(2)}</p>
+                      <p className="font-mono text-lg font-semibold text-destructive/80">₹{exp.amount.toFixed(2)}</p>
                     </div>
                   </div>
                 </CardContent>
