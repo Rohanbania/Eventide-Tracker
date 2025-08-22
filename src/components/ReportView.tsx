@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Sparkles, BarChart2, FileText, DollarSign } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChartContainer, ChartConfig, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { BarChart, Bar, XAxis, YAxis } from "recharts"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts"
 
 const chartConfig = {
   amount: {
@@ -95,6 +95,7 @@ export function ReportView({ event }: { event: Event }) {
             {chartData.length > 0 ? (
               <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
                 <BarChart accessibilityLayer data={chartData}>
+                  <CartesianGrid vertical={false} />
                   <XAxis
                     dataKey="source"
                     tickLine={false}
