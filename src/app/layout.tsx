@@ -1,6 +1,8 @@
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
+import { AuthProvider } from '@/contexts/AuthContext';
+import { EventProvider } from '@/contexts/EventContext';
 
 export const metadata: Metadata = {
   title: 'Eventide Tracker',
@@ -20,8 +22,12 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400..900;1,400..900&family=Belleza&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased min-h-screen bg-background">
-        {children}
-        <Toaster />
+        <AuthProvider>
+          <EventProvider>
+            {children}
+            <Toaster />
+          </EventProvider>
+        </AuthProvider>
       </body>
     </html>
   );

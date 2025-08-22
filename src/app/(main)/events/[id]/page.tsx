@@ -1,32 +1,39 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useEvents } from '@/contexts/EventContext';
 import { ExpenseTracker } from '@/components/ExpenseTracker';
 import { IncomeTracker } from '@/components/IncomeTracker';
 import { ReportView } from '@/components/ReportView';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, NotebookText, DollarSign, BarChart2 } from 'lucide-react';
+import { Calendar, NotebookText, DollarSign, BarChart2, Sparkles } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { useEffect } from 'react';
 
 export default function EventDetailPage() {
   const params = useParams();
-  const { getEventById } = useEvents();
+  const router = useRouter();
+  const { getEventById, loading } = useEvents();
   const eventId = typeof params.id === 'string' ? params.id : '';
   const event = getEventById(eventId);
 
-  if (!event) {
+  useEffect(() => {
+    // If events are loaded and the specific event is not found, redirect.
+    if (!loading && !event) {
+      router.push('/');
+    }
+  }, [event, loading, router]);
+
+
+  if (loading || !event) {
     return (
-      <div className="container mx-auto text-center py-20">
-        <h2 className="text-3xl font-headline">Event Not Found</h2>
-        <p className="text-muted-foreground mt-2">The event you are looking for does not exist.</p>
-        <Button asChild className="mt-4">
-            <Link href="/">Go Back to Dashboard</Link>
-        </Button>
-      </div>
-    );
+       <div className="container mx-auto text-center py-20">
+         <Sparkles className="w-12 h-12 animate-spin text-primary mx-auto" />
+         <p className="text-muted-foreground mt-4">Loading event data...</p>
+       </div>
+    )
   }
 
   return (

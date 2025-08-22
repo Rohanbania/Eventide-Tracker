@@ -1,105 +1,123 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
+import { collection, addDoc, query, where, onSnapshot, doc, updateDoc, orderBy } from 'firebase/firestore';
 import type { Event, Expense, Income } from '@/lib/types';
 import { summarizeExpense } from '@/ai/flows/summarize-expense';
 import { useToast } from '@/hooks/use-toast';
-
-// Mock Data
-const initialEvents: Event[] = [
-  {
-    id: '1',
-    name: 'Art Fair Booth',
-    date: '2024-08-15',
-    expenses: [
-      { id: 'exp1', notes: 'Great foot traffic in the morning. People loved the new landscape series.', amount: 200, createdAt: '2024-08-15T10:00:00Z' },
-      { id: 'exp2', notes: 'Afternoon was slower. The corner spot might not be ideal. Consider a central location next time.', amount: 50, createdAt: '2024-08-15T14:30:00Z' },
-    ],
-    incomes: [
-      { id: 'inc1', source: 'Painting Sale "Sunset"', amount: 450, date: '2024-08-15' },
-      { id: 'inc2', source: 'Print Sales', amount: 120, date: '2024-08-15' },
-    ],
-    expenseSummary: 'The Art Fair Booth event had strong morning engagement, particularly with the new landscape series. However, the afternoon saw a decline in foot traffic, suggesting that the booth\'s corner location may have been a contributing factor. For future events, securing a more central spot could be beneficial for maintaining consistent visitor flow throughout the day.'
-  },
-  {
-    id: '2',
-    name: 'Local Music Gig',
-    date: '2024-07-20',
-    expenses: [
-      { id: 'exp3', notes: 'The crowd was really into the new songs. Sound system was a bit muddy during the first set.', amount: 150, createdAt: '2024-07-20T21:00:00Z' },
-    ],
-    incomes: [
-      { id: 'inc3', source: 'Ticket Sales', amount: 800, date: '2024-07-20' },
-      { id: 'inc4', source: 'Merchandise', amount: 250, date: '2024-07-20' },
-    ],
-  },
-];
-
+import { useAuth } from './AuthContext';
+import { db } from '@/lib/firebase';
+import { Timestamp } from 'firebase/firestore';
 
 interface EventContextType {
   events: Event[];
+  loading: boolean;
   getEventById: (id: string) => Event | undefined;
-  addEvent: (name: string, date: string) => void;
-  addExpense: (eventId: string, notes: string, amount: number) => void;
-  addIncome: (eventId: string, source: string, amount: number) => void;
+  addEvent: (name: string, date: string) => Promise<void>;
+  addExpense: (eventId: string, notes: string, amount: number) => Promise<void>;
+  addIncome: (eventId: string, source: string, amount: number) => Promise<void>;
   generateExpenseSummary: (eventId: string) => Promise<void>;
 }
 
 const EventContext = createContext<EventContextType | undefined>(undefined);
 
 export const EventProvider = ({ children }: { children: ReactNode }) => {
-  const [events, setEvents] = useState<Event[]>(initialEvents);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      setLoading(true);
+      const q = query(collection(db, "events"), where("userId", "==", user.uid), orderBy("createdAt", "desc"));
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const userEvents: Event[] = [];
+        querySnapshot.forEach((doc) => {
+          userEvents.push({ id: doc.id, ...doc.data() } as Event);
+        });
+        setEvents(userEvents);
+        setLoading(false);
+      }, (error) => {
+        console.error("Error fetching events:", error);
+        toast({ variant: 'destructive', title: "Error", description: "Could not fetch events."});
+        setLoading(false);
+      });
+
+      return () => unsubscribe();
+    } else {
+      setEvents([]);
+      setLoading(false);
+    }
+  }, [user, toast]);
 
   const getEventById = useCallback((id: string) => {
     return events.find(event => event.id === id);
   }, [events]);
 
-  const addEvent = (name: string, date: string) => {
-    const newEvent: Event = {
-      id: (Math.random() * 1000000).toString(),
-      name,
-      date,
-      expenses: [],
-      incomes: [],
-    };
-    setEvents(prevEvents => [newEvent, ...prevEvents]);
-    toast({
-      title: "Event Created!",
-      description: `"${name}" has been added to your list.`,
-    });
+  const addEvent = async (name: string, date: string) => {
+    if (!user) return;
+    try {
+      await addDoc(collection(db, "events"), {
+        userId: user.uid,
+        name,
+        date,
+        expenses: [],
+        incomes: [],
+        createdAt: Timestamp.now(),
+      });
+      toast({
+        title: "Event Created!",
+        description: `"${name}" has been added to your list.`,
+      });
+    } catch (error) {
+      console.error("Error creating event:", error);
+      toast({ variant: 'destructive', title: "Error", description: "Could not create event."});
+    }
   };
 
-  const addExpense = (eventId: string, notes: string, amount: number) => {
+  const addExpense = async (eventId: string, notes: string, amount: number) => {
+    const event = getEventById(eventId);
+    if (!event) return;
+
     const newExpense: Expense = {
       id: (Math.random() * 1000000).toString(),
       notes,
       amount,
       createdAt: new Date().toISOString(),
     };
-    setEvents(prevEvents =>
-      prevEvents.map(event =>
-        event.id === eventId
-          ? { ...event, expenses: [newExpense, ...event.expenses] }
-          : event
-      )
-    );
+    
+    try {
+        const eventRef = doc(db, "events", eventId);
+        await updateDoc(eventRef, {
+            expenses: [newExpense, ...event.expenses]
+        });
+    } catch (error) {
+        console.error("Error adding expense:", error);
+        toast({ variant: 'destructive', title: "Error", description: "Could not add expense."});
+    }
   };
 
-  const addIncome = (eventId: string, source: string, amount: number) => {
+  const addIncome = async (eventId: string, source: string, amount: number) => {
+    const event = getEventById(eventId);
+    if (!event) return;
+    
     const newIncome: Income = {
       id: (Math.random() * 1000000).toString(),
       source,
       amount,
       date: new Date().toISOString().split('T')[0],
     };
-    setEvents(prevEvents =>
-      prevEvents.map(event =>
-        event.id === eventId
-          ? { ...event, incomes: [newIncome, ...event.incomes] }
-          : event
-      )
-    );
+
+    try {
+        const eventRef = doc(db, "events", eventId);
+        await updateDoc(eventRef, {
+            incomes: [newIncome, ...event.incomes]
+        });
+    } catch(error) {
+        console.error("Error adding income:", error);
+        toast({ variant: 'destructive', title: "Error", description: "Could not add income."});
+    }
   };
 
   const generateExpenseSummary = async (eventId: string) => {
@@ -120,11 +138,11 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
         expenseNotes: allNotes,
       });
 
-      setEvents(prevEvents =>
-        prevEvents.map(e =>
-          e.id === eventId ? { ...e, expenseSummary: result.summary } : e
-        )
-      );
+      const eventRef = doc(db, "events", eventId);
+      await updateDoc(eventRef, {
+        expenseSummary: result.summary
+      });
+
       toast({
         title: "Summary Generated",
         description: "The AI summary has been successfully created.",
@@ -141,6 +159,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
 
   const value = {
     events,
+    loading,
     getEventById,
     addEvent,
     addExpense,

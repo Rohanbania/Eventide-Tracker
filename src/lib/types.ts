@@ -1,3 +1,5 @@
+import { Timestamp } from "firebase/firestore";
+
 export interface Income {
   id: string;
   source: string;
@@ -6,7 +8,7 @@ export interface Income {
 }
 
 export interface Expense {
-  id: string;
+  id:string;
   notes: string;
   amount: number;
   createdAt: string;
@@ -14,9 +16,11 @@ export interface Expense {
 
 export interface Event {
   id: string;
+  userId: string;
   name: string;
   date: string;
   expenses: Expense[];
   incomes: Income[];
   expenseSummary?: string;
+  createdAt: Timestamp;
 }
