@@ -1,16 +1,17 @@
+
 "use client";
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useEvents } from '@/contexts/EventContext';
-import type { Event } from '@/lib/types';
+import type { Event, Income } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption, TableFooter } from '@/components/ui/table';
-import { IndianRupee } from 'lucide-react';
+import { IndianRupee, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -18,27 +19,25 @@ import { cn } from "@/lib/utils"
 import { Calendar as CalendarIcon } from "lucide-react"
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { Badge } from './ui/badge';
-
-const formSchema = z.object({
-  source: z.string().min(2, 'Source must be at least 2 characters.'),
-  amount: z.coerce.number().positive('Amount must be a positive number.'),
-  createdAt: z.date(),
-  transactionType: z.enum(['Cash', 'Bank']),
-});
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
+import { AddIncomeSheet } from './AddIncomeSheet';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
+import { toast } from '@/hooks/use-toast';
 
 export function IncomeTracker({ event }: { event: Event }) {
-  const { addIncome } = useEvents();
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: { source: '', amount: 0, createdAt: new Date(), transactionType: 'Cash' },
-  });
-
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    addIncome(event.id, values.source, values.amount, values.createdAt.toISOString(), values.transactionType);
-    form.reset({ source: '', amount: 0, createdAt: new Date(), transactionType: 'Cash' });
-  };
+  const { deleteIncome } = useEvents();
   
   const totalIncome = event.incomes.reduce((sum, income) => sum + income.amount, 0);
+
+  const handleDeleteIncome = async (incomeId: string) => {
+    try {
+        await deleteIncome(event.id, incomeId);
+        toast({ title: "Income Deleted", description: "The income record has been successfully removed." });
+    } catch (error) {
+        toast({ variant: 'destructive', title: "Error", description: "Failed to delete income record." });
+    }
+  };
+
 
   return (
     <div className="grid md:grid-cols-3 gap-8">
@@ -49,113 +48,9 @@ export function IncomeTracker({ event }: { event: Event }) {
             <CardDescription>Add a new source of revenue from this event.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="transactionType"
-                  render={({ field }) => (
-                    <FormItem className="space-y-3">
-                      <FormLabel>Transaction Type</FormLabel>
-                      <FormControl>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                          className="flex space-x-4"
-                        >
-                          <FormItem className="flex items-center space-x-2 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value="Cash" />
-                            </FormControl>
-                            <FormLabel className="font-normal">Cash</FormLabel>
-                          </FormItem>
-                          <FormItem className="flex items-center space-x-2 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value="Bank" />
-                            </FormControl>
-                            <FormLabel className="font-normal">Bank</FormLabel>
-                          </FormItem>
-                        </RadioGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="source"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Income Source</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Ticket Sales" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="amount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Amount</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
-                          <Input type="number" step="0.01" placeholder="10000.00" className="pl-8" {...field} />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                 <FormField
-                  control={form.control}
-                  name="createdAt"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) =>
-                              date > new Date() || date < new Date("1900-01-01")
-                            }
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" className="w-full">
-                  Add Income
-                </Button>
-              </form>
-            </Form>
+            <AddIncomeSheet event={event}>
+                <Button className="w-full">Add New Income</Button>
+            </AddIncomeSheet>
           </CardContent>
         </Card>
       </div>
@@ -172,6 +67,7 @@ export function IncomeTracker({ event }: { event: Event }) {
                 <TableHead>Type</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead className="text-right">Amount</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -185,12 +81,47 @@ export function IncomeTracker({ event }: { event: Event }) {
                   </TableCell>
                   <TableCell className="text-muted-foreground">{format(new Date(income.createdAt), 'MMM d, yyyy')}</TableCell>
                   <TableCell className="text-right font-mono">₹{income.amount.toFixed(2)}</TableCell>
+                   <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <AddIncomeSheet event={event} incomeToEdit={income}>
+                           <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                              <Pencil className="mr-2 h-4 w-4" /> Edit
+                           </DropdownMenuItem>
+                        </AddIncomeSheet>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <DropdownMenuItem className="text-destructive focus:bg-destructive/10" onSelect={(e) => e.preventDefault()}>
+                                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                            </DropdownMenuItem>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will permanently delete this income record. This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteIncome(income.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
             <TableFooter>
                 <TableRow>
-                    <TableCell colSpan={3} className="font-bold text-lg">Total Income</TableCell>
+                    <TableCell colSpan={4} className="font-bold text-lg">Total Income</TableCell>
                     <TableCell className="text-right font-bold font-mono text-lg">₹{totalIncome.toFixed(2)}</TableCell>
                 </TableRow>
             </TableFooter>

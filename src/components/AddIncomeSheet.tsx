@@ -1,11 +1,12 @@
+
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useEvents } from '@/contexts/EventContext';
-import type { Event } from '@/lib/types';
+import type { Event, Income } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -26,21 +27,45 @@ const formSchema = z.object({
 
 interface AddIncomeSheetProps {
   event: Event;
+  incomeToEdit?: Income;
   children: React.ReactNode;
 }
 
-export function AddIncomeSheet({ event, children }: AddIncomeSheetProps) {
+export function AddIncomeSheet({ event, incomeToEdit, children }: AddIncomeSheetProps) {
   const [open, setOpen] = useState(false);
-  const { addIncome } = useEvents();
+  const { addIncome, updateIncome } = useEvents();
+  const isEditMode = !!incomeToEdit;
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: { source: '', amount: 0, createdAt: new Date(), transactionType: 'Cash' },
   });
 
+  useEffect(() => {
+    if (isEditMode && incomeToEdit) {
+        form.reset({
+            source: incomeToEdit.source,
+            amount: incomeToEdit.amount,
+            createdAt: new Date(incomeToEdit.createdAt),
+            transactionType: incomeToEdit.transactionType,
+        });
+    } else {
+        form.reset({ source: '', amount: 0, createdAt: new Date(), transactionType: 'Cash' });
+    }
+  }, [incomeToEdit, isEditMode, form, open]);
+
+
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    addIncome(event.id, values.source, values.amount, values.createdAt.toISOString(), values.transactionType);
-    form.reset({ source: '', amount: 0, createdAt: new Date(), transactionType: 'Cash' });
+    if (isEditMode && incomeToEdit) {
+        const updatedIncome: Income = {
+            ...incomeToEdit,
+            ...values,
+            createdAt: values.createdAt.toISOString()
+        };
+        updateIncome(event.id, updatedIncome);
+    } else {
+        addIncome(event.id, values.source, values.amount, values.createdAt.toISOString(), values.transactionType);
+    }
     setOpen(false);
   };
 
@@ -49,8 +74,8 @@ export function AddIncomeSheet({ event, children }: AddIncomeSheetProps) {
       <SheetTrigger asChild>{children}</SheetTrigger>
       <SheetContent>
         <SheetHeader>
-          <SheetTitle className="font-headline">Add Income for {event.name}</SheetTitle>
-          <SheetDescription>Quickly add a new income source for this event.</SheetDescription>
+          <SheetTitle className="font-headline">{isEditMode ? 'Edit' : 'Add'} Income for {event.name}</SheetTitle>
+          <SheetDescription>Quickly {isEditMode ? 'update' : 'add'} an income source for this event.</SheetDescription>
         </SheetHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-8">
@@ -63,7 +88,7 @@ export function AddIncomeSheet({ event, children }: AddIncomeSheetProps) {
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value}
                       className="flex space-x-4"
                     >
                       <FormItem className="flex items-center space-x-2 space-y-0">
@@ -156,7 +181,7 @@ export function AddIncomeSheet({ event, children }: AddIncomeSheetProps) {
             />
             <SheetFooter>
               <Button type="submit" className="w-full">
-                Save Income
+                {isEditMode ? 'Save Changes' : 'Save Income'}
               </Button>
             </SheetFooter>
           </form>

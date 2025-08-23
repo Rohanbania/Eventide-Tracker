@@ -1,11 +1,12 @@
+
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useEvents } from '@/contexts/EventContext';
-import type { Event } from '@/lib/types';
+import type { Event, Expense } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -27,21 +28,44 @@ const formSchema = z.object({
 
 interface AddExpenseSheetProps {
   event: Event;
+  expenseToEdit?: Expense;
   children: React.ReactNode;
 }
 
-export function AddExpenseSheet({ event, children }: AddExpenseSheetProps) {
+export function AddExpenseSheet({ event, expenseToEdit, children }: AddExpenseSheetProps) {
   const [open, setOpen] = useState(false);
-  const { addExpense } = useEvents();
+  const { addExpense, updateExpense } = useEvents();
+  const isEditMode = !!expenseToEdit;
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: { notes: '', amount: 0, createdAt: new Date(), transactionType: 'Cash' },
   });
 
+  useEffect(() => {
+    if (isEditMode && expenseToEdit) {
+        form.reset({
+            notes: expenseToEdit.notes,
+            amount: expenseToEdit.amount,
+            createdAt: new Date(expenseToEdit.createdAt),
+            transactionType: expenseToEdit.transactionType,
+        });
+    } else {
+        form.reset({ notes: '', amount: 0, createdAt: new Date(), transactionType: 'Cash' });
+    }
+  }, [expenseToEdit, isEditMode, form, open]);
+
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    addExpense(event.id, values.notes || '', values.amount, values.createdAt.toISOString(), values.transactionType);
-    form.reset({ notes: '', amount: 0, createdAt: new Date(), transactionType: 'Cash' });
+    if (isEditMode && expenseToEdit) {
+        const updatedExpense: Expense = {
+            ...expenseToEdit,
+            ...values,
+            createdAt: values.createdAt.toISOString()
+        };
+        updateExpense(event.id, updatedExpense);
+    } else {
+        addExpense(event.id, values.notes || '', values.amount, values.createdAt.toISOString(), values.transactionType);
+    }
     setOpen(false);
   };
 
@@ -50,8 +74,8 @@ export function AddExpenseSheet({ event, children }: AddExpenseSheetProps) {
       <SheetTrigger asChild>{children}</SheetTrigger>
       <SheetContent>
         <SheetHeader>
-          <SheetTitle className="font-headline">Add Expense for {event.name}</SheetTitle>
-          <SheetDescription>Quickly add a new expense for this event.</SheetDescription>
+          <SheetTitle className="font-headline">{isEditMode ? 'Edit' : 'Add'} Expense for {event.name}</SheetTitle>
+          <SheetDescription>Quickly {isEditMode ? 'update' : 'add'} an expense for this event.</SheetDescription>
         </SheetHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-8">
@@ -64,7 +88,7 @@ export function AddExpenseSheet({ event, children }: AddExpenseSheetProps) {
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value}
                       className="flex space-x-4"
                     >
                       <FormItem className="flex items-center space-x-2 space-y-0">
@@ -157,7 +181,7 @@ export function AddExpenseSheet({ event, children }: AddExpenseSheetProps) {
             />
             <SheetFooter>
               <Button type="submit" className="w-full">
-                Save Expense
+                {isEditMode ? 'Save Changes' : 'Save Expense'}
               </Button>
             </SheetFooter>
           </form>

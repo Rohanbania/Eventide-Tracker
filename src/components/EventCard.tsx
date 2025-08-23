@@ -1,32 +1,95 @@
+
 import Link from 'next/link';
 import { format, parseISO } from 'date-fns';
-import { ArrowRight, Calendar, IndianRupee, Wallet } from 'lucide-react';
+import { ArrowRight, Calendar, IndianRupee, Wallet, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import type { Event } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AddExpenseSheet } from './AddExpenseSheet';
 import { AddIncomeSheet } from './AddIncomeSheet';
 import { Separator } from './ui/separator';
+import { CreateEventDialog } from './CreateEventDialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
+import { useEvents } from '@/contexts/EventContext';
+import { toast } from '@/hooks/use-toast';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
 
 interface EventCardProps {
   event: Event;
 }
 
 export function EventCard({ event }: EventCardProps) {
+  const { deleteEvent } = useEvents();
   const totalIncome = event.incomes.reduce((acc, income) => acc + income.amount, 0);
   const totalExpenses = event.expenses.reduce((acc, expense) => acc + expense.amount, 0);
   const balance = totalIncome - totalExpenses;
 
+  const handleDelete = async () => {
+    try {
+        await deleteEvent(event.id);
+        toast({
+            title: "Event Deleted",
+            description: `"${event.name}" has been removed.`,
+        });
+    } catch (error) {
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to delete event.",
+        });
+    }
+  };
+
   return (
     <Card className="h-full flex flex-col transition-all duration-300 hover:shadow-primary/20 hover:shadow-lg">
+      <CardHeader className="flex-row items-start justify-between">
+          <div>
+            <CardTitle className="font-headline text-2xl tracking-wide leading-tight group">
+                <Link href={`/events/${event.id}`} className="hover:underline">
+                    {event.name}
+                </Link>
+            </CardTitle>
+            <CardDescription className="flex items-center gap-2 pt-1">
+                <Calendar className="w-4 h-4" />
+                {format(parseISO(event.date), 'MMMM d, yyyy')}
+            </CardDescription>
+          </div>
+           <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreVertical className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <CreateEventDialog eventToEdit={event}>
+                         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                            <Pencil className="mr-2 h-4 w-4" /> Edit
+                        </DropdownMenuItem>
+                    </CreateEventDialog>
+                    <DropdownMenuSeparator />
+                     <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive" onSelect={(e) => e.preventDefault()}>
+                                 <Trash2 className="mr-2 h-4 w-4" /> Delete
+                            </DropdownMenuItem>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete {event.name} and all its data.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </DropdownMenuContent>
+            </DropdownMenu>
+      </CardHeader>
        <Link href={`/events/${event.id}`} className="block group flex-grow">
-        <CardHeader>
-          <CardTitle className="font-headline text-2xl tracking-wide">{event.name}</CardTitle>
-          <CardDescription className="flex items-center gap-2 pt-1">
-            <Calendar className="w-4 h-4" />
-            {format(parseISO(event.date), 'MMMM d, yyyy')}
-          </CardDescription>
-        </CardHeader>
         <CardContent className="flex-grow space-y-3">
           <div className="flex justify-between items-center text-sm">
             <div className="flex items-center gap-2 text-muted-foreground">

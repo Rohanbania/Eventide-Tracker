@@ -1,7 +1,8 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
-import { collection, addDoc, query, where, onSnapshot, doc, updateDoc, orderBy } from 'firebase/firestore';
+import { collection, addDoc, query, where, onSnapshot, doc, updateDoc, orderBy, deleteDoc } from 'firebase/firestore';
 import type { Event, Expense, Income, TransactionType } from '@/lib/types';
 import { summarizeExpense } from '@/ai/flows/summarize-expense';
 import { useToast } from '@/hooks/use-toast';
@@ -14,8 +15,14 @@ interface EventContextType {
   loading: boolean;
   getEventById: (id: string) => Event | undefined;
   addEvent: (name: string, date: string, description?: string) => Promise<void>;
+  updateEvent: (eventId: string, name: string, date: string, description?: string) => Promise<void>;
+  deleteEvent: (eventId: string) => Promise<void>;
   addExpense: (eventId: string, notes: string, amount: number, createdAt: string, transactionType: TransactionType) => Promise<void>;
+  updateExpense: (eventId: string, expense: Expense) => Promise<void>;
+  deleteExpense: (eventId: string, expenseId: string) => Promise<void>;
   addIncome: (eventId: string, source: string, amount: number, createdAt: string, transactionType: TransactionType) => Promise<void>;
+  updateIncome: (eventId: string, income: Income) => Promise<void>;
+  deleteIncome: (eventId: string, incomeId: string) => Promise<void>;
   generateExpenseSummary: (eventId: string) => Promise<void>;
 }
 
@@ -77,12 +84,36 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const updateEvent = async (eventId: string, name: string, date: string, description?: string) => {
+    try {
+      const eventRef = doc(db, "events", eventId);
+      await updateDoc(eventRef, { name, date, description });
+      toast({
+        title: "Event Updated",
+        description: "Your event details have been saved.",
+      });
+    } catch (error) {
+      console.error("Error updating event:", error);
+      toast({ variant: 'destructive', title: "Error", description: "Could not update event."});
+    }
+  };
+
+  const deleteEvent = async (eventId: string) => {
+    try {
+      await deleteDoc(doc(db, "events", eventId));
+    } catch (error) {
+      console.error("Error deleting event:", error);
+      toast({ variant: 'destructive', title: "Error", description: "Could not delete event."});
+      throw error;
+    }
+  };
+
   const addExpense = async (eventId: string, notes: string, amount: number, createdAt: string, transactionType: TransactionType) => {
     const event = getEventById(eventId);
     if (!event) return;
 
     const newExpense: Expense = {
-      id: (Math.random() * 1000000).toString(),
+      id: doc(collection(db, "dummy")).id, // Generate a unique ID
       notes,
       amount,
       createdAt,
@@ -94,18 +125,54 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
         await updateDoc(eventRef, {
             expenses: [newExpense, ...event.expenses]
         });
+        toast({ title: "Expense Added", description: "Your expense has been recorded." });
     } catch (error) {
         console.error("Error adding expense:", error);
         toast({ variant: 'destructive', title: "Error", description: "Could not add expense."});
     }
   };
 
+  const updateExpense = async (eventId: string, updatedExpense: Expense) => {
+    const event = getEventById(eventId);
+    if (!event) return;
+
+    const updatedExpenses = event.expenses.map(expense => 
+        expense.id === updatedExpense.id ? updatedExpense : expense
+    );
+
+    try {
+        const eventRef = doc(db, "events", eventId);
+        await updateDoc(eventRef, { expenses: updatedExpenses });
+        toast({ title: "Expense Updated", description: "Your expense has been successfully updated." });
+    } catch (error) {
+        console.error("Error updating expense:", error);
+        toast({ variant: 'destructive', title: "Error", description: "Could not update expense." });
+    }
+  };
+
+  const deleteExpense = async (eventId: string, expenseId: string) => {
+    const event = getEventById(eventId);
+    if (!event) return;
+
+    const updatedExpenses = event.expenses.filter(expense => expense.id !== expenseId);
+
+    try {
+        const eventRef = doc(db, "events", eventId);
+        await updateDoc(eventRef, { expenses: updatedExpenses });
+    } catch (error) {
+        console.error("Error deleting expense:", error);
+        toast({ variant: 'destructive', title: "Error", description: "Could not delete expense." });
+        throw error;
+    }
+  };
+
+
   const addIncome = async (eventId: string, source: string, amount: number, createdAt: string, transactionType: TransactionType) => {
     const event = getEventById(eventId);
     if (!event) return;
     
     const newIncome: Income = {
-      id: (Math.random() * 1000000).toString(),
+      id: doc(collection(db, "dummy")).id, // Generate a unique ID
       source,
       amount,
       createdAt,
@@ -117,9 +184,44 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
         await updateDoc(eventRef, {
             incomes: [newIncome, ...event.incomes]
         });
+        toast({ title: "Income Added", description: "Your income has been recorded." });
     } catch(error) {
         console.error("Error adding income:", error);
         toast({ variant: 'destructive', title: "Error", description: "Could not add income."});
+    }
+  };
+
+  const updateIncome = async (eventId: string, updatedIncome: Income) => {
+    const event = getEventById(eventId);
+    if (!event) return;
+
+    const updatedIncomes = event.incomes.map(income =>
+        income.id === updatedIncome.id ? updatedIncome : income
+    );
+
+    try {
+        const eventRef = doc(db, "events", eventId);
+        await updateDoc(eventRef, { incomes: updatedIncomes });
+        toast({ title: "Income Updated", description: "Your income has been successfully updated." });
+    } catch (error) {
+        console.error("Error updating income:", error);
+        toast({ variant: 'destructive', title: "Error", description: "Could not update income." });
+    }
+  };
+
+  const deleteIncome = async (eventId: string, incomeId: string) => {
+    const event = getEventById(eventId);
+    if (!event) return;
+
+    const updatedIncomes = event.incomes.filter(income => income.id !== incomeId);
+
+    try {
+        const eventRef = doc(db, "events", eventId);
+        await updateDoc(eventRef, { incomes: updatedIncomes });
+    } catch (error) {
+        console.error("Error deleting income:", error);
+        toast({ variant: 'destructive', title: "Error", description: "Could not delete income." });
+        throw error;
     }
   };
 
@@ -165,8 +267,14 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     loading,
     getEventById,
     addEvent,
+    updateEvent,
+    deleteEvent,
     addExpense,
+    updateExpense,
+    deleteExpense,
     addIncome,
+    updateIncome,
+    deleteIncome,
     generateExpenseSummary,
   };
 
