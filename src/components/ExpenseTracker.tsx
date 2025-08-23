@@ -29,8 +29,8 @@ export function ExpenseTracker({ event }: { event: Event }) {
   const totalExpenses = event.expenses.reduce((sum, expense) => sum + expense.amount, 0);
 
   return (
-    <div className="grid md:grid-cols-3 gap-8">
-      <div className="md:col-span-1">
+    <div className="grid lg:grid-cols-3 gap-8">
+      <div className="lg:col-span-1">
         <Card>
           <CardHeader>
             <CardTitle className="font-headline">Record Expense</CardTitle>
@@ -43,80 +43,82 @@ export function ExpenseTracker({ event }: { event: Event }) {
           </CardContent>
         </Card>
       </div>
-      <div className="md:col-span-2">
+      <div className="lg:col-span-2">
         <h3 className="text-2xl font-headline mb-4 flex items-center gap-2">
             <IndianRupee className="w-6 h-6" /> Expense Entries
         </h3>
-        <Card className="overflow-x-auto">
-          <Table>
-            {event.expenses.length === 0 && <TableCaption>No expenses recorded yet.</TableCaption>}
-            <TableHeader>
-              <TableRow>
-                <TableHead>Notes</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {event.expenses.map((expense) => (
-                <TableRow key={expense.id} className="animate-in fade-in-0">
-                  <TableCell className="font-medium max-w-[150px] md:max-w-xs truncate">{expense.notes || '-'}</TableCell>
-                   <TableCell>
-                    <Badge variant={expense.transactionType === 'Bank' ? 'secondary' : 'outline'}>
-                      {expense.transactionType}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground whitespace-nowrap">{format(new Date(expense.createdAt), 'MMM d, yyyy')}</TableCell>
-                  <TableCell className="text-right font-mono text-destructive/80 whitespace-nowrap">₹{expense.amount.toFixed(2)}</TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <AddExpenseDialog event={event} expenseToEdit={expense}>
-                           <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                              <Pencil className="mr-2 h-4 w-4" /> Edit
-                           </DropdownMenuItem>
-                        </AddExpenseDialog>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <DropdownMenuItem className="text-destructive focus:bg-destructive/10" onSelect={(e) => e.preventDefault()}>
-                                <Trash2 className="mr-2 h-4 w-4" /> Delete
-                            </DropdownMenuItem>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This will permanently delete this expense record. This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteExpense(expense.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+        <Card>
+          <div className="overflow-x-auto">
+            <Table>
+              {event.expenses.length === 0 && <TableCaption>No expenses recorded yet.</TableCaption>}
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Notes</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-            {event.expenses.length > 0 && (
-                <TableFooter>
-                    <TableRow>
-                        <TableCell colSpan={4} className="font-bold text-lg">Total Expenses</TableCell>
-                        <TableCell className="text-right font-bold font-mono text-lg text-destructive/80 whitespace-nowrap">₹{totalExpenses.toFixed(2)}</TableCell>
-                    </TableRow>
-                </TableFooter>
-            )}
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {event.expenses.map((expense) => (
+                  <TableRow key={expense.id} className="animate-in fade-in-0">
+                    <TableCell className="font-medium max-w-[150px] md:max-w-xs truncate">{expense.notes || '-'}</TableCell>
+                     <TableCell>
+                      <Badge variant={expense.transactionType === 'Bank' ? 'secondary' : 'outline'}>
+                        {expense.transactionType}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground whitespace-nowrap">{format(new Date(expense.createdAt), 'MMM d, yyyy')}</TableCell>
+                    <TableCell className="text-right font-mono text-destructive/80 whitespace-nowrap">₹{expense.amount.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <AddExpenseDialog event={event} expenseToEdit={expense}>
+                             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                <Pencil className="mr-2 h-4 w-4" /> Edit
+                             </DropdownMenuItem>
+                          </AddExpenseDialog>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <DropdownMenuItem className="text-destructive focus:bg-destructive/10" onSelect={(e) => e.preventDefault()}>
+                                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                              </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This will permanently delete this expense record. This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteExpense(expense.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+              {event.expenses.length > 0 && (
+                  <TableFooter>
+                      <TableRow>
+                          <TableCell colSpan={4} className="font-bold text-lg">Total Expenses</TableCell>
+                          <TableCell className="text-right font-bold font-mono text-lg text-destructive/80 whitespace-nowrap">₹{totalExpenses.toFixed(2)}</TableCell>
+                      </TableRow>
+                  </TableFooter>
+              )}
+            </Table>
+          </div>
         </Card>
       </div>
     </div>

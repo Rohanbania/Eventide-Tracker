@@ -30,8 +30,8 @@ export function IncomeTracker({ event }: { event: Event }) {
 
 
   return (
-    <div className="grid md:grid-cols-3 gap-8">
-      <div className="md:col-span-1">
+    <div className="grid lg:grid-cols-3 gap-8">
+      <div className="lg:col-span-1">
         <Card>
           <CardHeader>
             <CardTitle className="font-headline">Record Income</CardTitle>
@@ -44,80 +44,82 @@ export function IncomeTracker({ event }: { event: Event }) {
           </CardContent>
         </Card>
       </div>
-      <div className="md:col-span-2">
+      <div className="lg:col-span-2">
         <h3 className="text-2xl font-headline mb-4 flex items-center gap-2">
             <IndianRupee className="w-6 h-6" /> Income Entries
         </h3>
-        <Card className="overflow-x-auto">
-          <Table>
-            {event.incomes.length === 0 && <TableCaption>No income recorded yet.</TableCaption>}
-            <TableHeader>
-              <TableRow>
-                <TableHead>Source</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {event.incomes.map((income) => (
-                <TableRow key={income.id} className="animate-in fade-in-0">
-                  <TableCell className="font-medium whitespace-nowrap">{income.source}</TableCell>
-                  <TableCell>
-                    <Badge variant={income.transactionType === 'Bank' ? 'secondary' : 'outline'}>
-                      {income.transactionType}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground whitespace-nowrap">{format(new Date(income.createdAt), 'MMM d, yyyy')}</TableCell>
-                  <TableCell className="text-right font-mono whitespace-nowrap">₹{income.amount.toFixed(2)}</TableCell>
-                   <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <AddIncomeDialog event={event} incomeToEdit={income}>
-                           <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                              <Pencil className="mr-2 h-4 w-4" /> Edit
-                           </DropdownMenuItem>
-                        </AddIncomeDialog>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <DropdownMenuItem className="text-destructive focus:bg-destructive/10" onSelect={(e) => e.preventDefault()}>
-                                <Trash2 className="mr-2 h-4 w-4" /> Delete
-                            </DropdownMenuItem>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This will permanently delete this income record. This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteIncome(income.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+        <Card>
+          <div className="overflow-x-auto">
+            <Table>
+              {event.incomes.length === 0 && <TableCaption>No income recorded yet.</TableCaption>}
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Source</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-             {event.incomes.length > 0 && (
-                <TableFooter>
-                    <TableRow>
-                        <TableCell colSpan={4} className="font-bold text-lg">Total Income</TableCell>
-                        <TableCell className="text-right font-bold font-mono text-lg whitespace-nowrap">₹{totalIncome.toFixed(2)}</TableCell>
-                    </TableRow>
-                </TableFooter>
-             )}
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {event.incomes.map((income) => (
+                  <TableRow key={income.id} className="animate-in fade-in-0">
+                    <TableCell className="font-medium whitespace-nowrap">{income.source}</TableCell>
+                    <TableCell>
+                      <Badge variant={income.transactionType === 'Bank' ? 'secondary' : 'outline'}>
+                        {income.transactionType}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground whitespace-nowrap">{format(new Date(income.createdAt), 'MMM d, yyyy')}</TableCell>
+                    <TableCell className="text-right font-mono whitespace-nowrap">₹{income.amount.toFixed(2)}</TableCell>
+                     <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <AddIncomeDialog event={event} incomeToEdit={income}>
+                             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                <Pencil className="mr-2 h-4 w-4" /> Edit
+                             </DropdownMenuItem>
+                          </AddIncomeDialog>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <DropdownMenuItem className="text-destructive focus:bg-destructive/10" onSelect={(e) => e.preventDefault()}>
+                                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                              </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This will permanently delete this income record. This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteIncome(income.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+               {event.incomes.length > 0 && (
+                  <TableFooter>
+                      <TableRow>
+                          <TableCell colSpan={4} className="font-bold text-lg">Total Income</TableCell>
+                          <TableCell className="text-right font-bold font-mono text-lg whitespace-nowrap">₹{totalIncome.toFixed(2)}</TableCell>
+                      </TableRow>
+                  </TableFooter>
+               )}
+            </Table>
+          </div>
         </Card>
       </div>
     </div>
