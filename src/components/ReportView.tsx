@@ -5,7 +5,7 @@ import { useState } from 'react';
 import type { Event } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Sparkles, BarChart2, FileText, IndianRupee, Wallet, Download } from 'lucide-react';
+import { Sparkles, BarChart2, FileText, IndianRupee, Wallet, Download, Landmark, Coins } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChartContainer, ChartConfig, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts"
@@ -35,15 +35,20 @@ export function ReportView({ event }: { event: Event }) {
   
   const handleDownloadPdf = () => {
     const doc = new jsPDF();
-    const totalIncome = event.incomes.reduce((sum, income) => sum + income.amount, 0);
-    const totalExpenses = event.expenses.reduce((sum, expense) => sum + expense.amount, 0);
+    const cashIncomes = event.incomes.filter(i => i.transactionType === 'Cash').reduce((acc, i) => acc + i.amount, 0);
+    const bankIncomes = event.incomes.filter(i => i.transactionType === 'Bank').reduce((acc, i) => acc + i.amount, 0);
+    const totalIncome = cashIncomes + bankIncomes;
+
+    const cashExpenses = event.expenses.filter(e => e.transactionType === 'Cash').reduce((acc, e) => acc + e.amount, 0);
+    const bankExpenses = event.expenses.filter(e => e.transactionType === 'Bank').reduce((acc, e) => acc + e.amount, 0);
+    const totalExpenses = cashExpenses + bankExpenses;
+    
+    const cashBalance = cashIncomes - cashExpenses;
+    const bankBalance = bankIncomes - bankExpenses;
     const netProfit = totalIncome - totalExpenses;
+
     let finalY = 0;
 
-    // It's important to use a font that supports the characters you need.
-    // jsPDF's built-in fonts have limited character support.
-    // For broader support, you would need to embed a custom font.
-    // For this case, we will use 'helvetica' and format the currency symbol manually.
     doc.setFont('helvetica');
     
     // Header
@@ -60,23 +65,25 @@ export function ReportView({ event }: { event: Event }) {
 
     finalY = 55;
 
-    const formatCurrency = (amount: number) => `Rs. ${amount.toFixed(2)}`;
+    const formatCurrency = (amount: number) => `₹${amount.toFixed(2)}`;
 
     // Summary Cards
     autoTable(doc, {
-      startY: finalY,
-      body: [[
-        { content: `Total Income\n${formatCurrency(totalIncome)}`, styles: { halign: 'center', fontStyle: 'bold' } },
-        { content: `Total Expenses\n${formatCurrency(totalExpenses)}`, styles: { halign: 'center', fontStyle: 'bold' } },
-        { content: `Net Profit\n${formatCurrency(netProfit)}`, styles: { halign: 'center', fontStyle: 'bold' } },
-      ]],
-      theme: 'grid',
-      styles: {
-        fontSize: 10,
-        cellPadding: 5,
-        fillColor: [245, 245, 245],
-        textColor: 44,
-      }
+        startY: finalY,
+        head: [['Category', 'Income', 'Expenses', 'Balance']],
+        body: [
+            ['Cash', formatCurrency(cashIncomes), formatCurrency(cashExpenses), formatCurrency(cashBalance)],
+            ['Bank', formatCurrency(bankIncomes), formatCurrency(bankExpenses), formatCurrency(bankBalance)],
+        ],
+        foot: [
+            [{ content: 'Total', colSpan: 1, styles: { fontStyle: 'bold' } }, 
+            formatCurrency(totalIncome), 
+            formatCurrency(totalExpenses), 
+            formatCurrency(netProfit)]
+        ],
+        theme: 'grid',
+        headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold' },
+        footStyles: { fillColor: [236, 240, 241], textColor: 44, fontStyle: 'bold' },
     });
 
     finalY = (doc as any).lastAutoTable.finalY + 15;
@@ -107,29 +114,35 @@ export function ReportView({ event }: { event: Event }) {
     };
     
     // Income Table
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Income Breakdown', 14, finalY);
-    autoTable(doc, {
-      ...tableConfig,
-      startY: finalY + 2,
-      head: [['Source', 'Date', 'Type', 'Amount']],
-      body: event.incomes.map(i => [i.source, format(new Date(i.createdAt), 'MMM d, yyyy'), i.transactionType, formatCurrency(i.amount)]),
-      foot: [['Total Income', '', '', formatCurrency(totalIncome)]],
-    });
-    finalY = (doc as any).lastAutoTable.finalY + 15;
+    if (event.incomes.length > 0) {
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Income Breakdown', 14, finalY);
+        autoTable(doc, {
+        ...tableConfig,
+        startY: finalY + 2,
+        head: [['Source', 'Date', 'Type', 'Amount']],
+        body: event.incomes.map(i => [i.source, format(new Date(i.createdAt), 'MMM d, yyyy'), i.transactionType, formatCurrency(i.amount)]),
+        foot: [['Total Income', '', '', formatCurrency(totalIncome)]],
+        });
+        finalY = (doc as any).lastAutoTable.finalY + 15;
+    }
+
 
     // Expense Table
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Expense Breakdown', 14, finalY);
-    autoTable(doc, {
-      ...tableConfig,
-      startY: finalY + 2,
-      head: [['Notes', 'Created At', 'Type', 'Amount']],
-      body: event.expenses.map(e => [e.notes || '-', format(new Date(e.createdAt), 'MMM d, yyyy'), e.transactionType, formatCurrency(e.amount)]),
-      foot: [['Total Expenses', '', '', formatCurrency(totalExpenses)]],
-    });
+    if (event.expenses.length > 0) {
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Expense Breakdown', 14, finalY);
+        autoTable(doc, {
+        ...tableConfig,
+        startY: finalY + 2,
+        head: [['Notes', 'Created At', 'Type', 'Amount']],
+        body: event.expenses.map(e => [e.notes || '-', format(new Date(e.createdAt), 'MMM d, yyyy'), e.transactionType, formatCurrency(e.amount)]),
+        foot: [['Total Expenses', '', '', formatCurrency(totalExpenses)]],
+        });
+    }
+
 
     const pdfOutput = doc.output('datauristring');
     doc.save(`report-${event.name.toLowerCase().replace(/ /g, '-')}.pdf`);
@@ -145,8 +158,16 @@ export function ReportView({ event }: { event: Event }) {
       });
   };
 
-  const totalIncome = event.incomes.reduce((sum, income) => sum + income.amount, 0);
-  const totalExpenses = event.expenses.reduce((sum, expense) => sum + expense.amount, 0);
+  const cashIncomes = event.incomes.filter(i => i.transactionType === 'Cash').reduce((acc, i) => acc + i.amount, 0);
+  const bankIncomes = event.incomes.filter(i => i.transactionType === 'Bank').reduce((acc, i) => acc + i.amount, 0);
+  const totalIncome = cashIncomes + bankIncomes;
+
+  const cashExpenses = event.expenses.filter(e => e.transactionType === 'Cash').reduce((acc, e) => acc + e.amount, 0);
+  const bankExpenses = event.expenses.filter(e => e.transactionType === 'Bank').reduce((acc, e) => acc + e.amount, 0);
+  const totalExpenses = cashExpenses + bankExpenses;
+  
+  const cashBalance = cashIncomes - cashExpenses;
+  const bankBalance = bankIncomes - bankExpenses;
   const netProfit = totalIncome - totalExpenses;
 
   const chartData = event.incomes.map(income => ({
@@ -162,16 +183,42 @@ export function ReportView({ event }: { event: Event }) {
                 Download PDF
             </Button>
         </div>
-       <div className="grid md:grid-cols-3 gap-4 md:gap-8">
+       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
         <Card>
           <CardHeader>
             <CardTitle className="font-headline flex items-center gap-2 text-lg md:text-xl">
-              <IndianRupee className="w-5 h-5 md:w-6 md:h-6 text-green-500" />
-              Total Income
+              <Coins className="w-5 h-5 md:w-6 md:h-6 text-green-500" />
+              Cash Balance
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl md:text-4xl font-bold font-mono text-primary-foreground/90">
+              ₹{cashBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-headline flex items-center gap-2 text-lg md:text-xl">
+              <Landmark className="w-5 h-5 md:w-6 md:h-6 text-blue-500" />
+              Bank Balance
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl md:text-4xl font-bold font-mono text-primary-foreground/90">
+              ₹{bankBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+          </CardContent>
+        </Card>
+         <Card>
+          <CardHeader>
+            <CardTitle className="font-headline flex items-center gap-2 text-lg md:text-xl">
+              <IndianRupee className={`w-5 h-5 md:w-6 md:h-6 text-indigo-500`} />
+              Total Income
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className={`text-2xl md:text-4xl font-bold font-mono text-primary-foreground/90`}>
               ₹{totalIncome.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </CardContent>
@@ -179,20 +226,7 @@ export function ReportView({ event }: { event: Event }) {
         <Card>
           <CardHeader>
             <CardTitle className="font-headline flex items-center gap-2 text-lg md:text-xl">
-              <IndianRupee className="w-5 h-5 md:w-6 md:h-6 text-red-500" />
-              Total Expenses
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl md:text-4xl font-bold font-mono text-destructive/90">
-              ₹{totalExpenses.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </p>
-          </CardContent>
-        </Card>
-         <Card>
-          <CardHeader>
-            <CardTitle className="font-headline flex items-center gap-2 text-lg md:text-xl">
-              <Wallet className={`w-5 h-5 md:w-6 md:h-6 ${netProfit >= 0 ? 'text-blue-500' : 'text-orange-500'}`} />
+              <Wallet className={`w-5 h-5 md:w-6 md:h-6 ${netProfit >= 0 ? 'text-emerald-500' : 'text-orange-500'}`} />
               Net Profit
             </CardTitle>
           </CardHeader>
