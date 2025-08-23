@@ -37,9 +37,11 @@ export function ReportView({ event }: { event: Event }) {
     const totalExpenses = event.expenses.reduce((sum, expense) => sum + expense.amount, 0);
     const netProfit = totalIncome - totalExpenses;
     let finalY = 0;
+
+    // Set a font that supports the Rupee symbol.
+    doc.setFont('helvetica');
     
     // Header
-    doc.setFont('helvetica', 'bold');
     doc.setFontSize(22);
     doc.setTextColor(44, 62, 80);
     doc.text("Eventide Tracker", 14, 22);
@@ -57,9 +59,9 @@ export function ReportView({ event }: { event: Event }) {
     autoTable(doc, {
       startY: finalY,
       body: [[
-        { content: `Total Income\n₹${totalIncome.toFixed(2)}`, styles: { halign: 'center', fontStyle: 'bold' } },
-        { content: `Total Expenses\n₹${totalExpenses.toFixed(2)}`, styles: { halign: 'center', fontStyle: 'bold' } },
-        { content: `Net Profit\n₹${netProfit.toFixed(2)}`, styles: { halign: 'center', fontStyle: 'bold' } },
+        { content: `Total Income\nRs. ${totalIncome.toFixed(2)}`, styles: { halign: 'center', fontStyle: 'bold' } },
+        { content: `Total Expenses\nRs. ${totalExpenses.toFixed(2)}`, styles: { halign: 'center', fontStyle: 'bold' } },
+        { content: `Net Profit\nRs. ${netProfit.toFixed(2)}`, styles: { halign: 'center', fontStyle: 'bold' } },
       ]],
       theme: 'grid',
       styles: {
@@ -105,8 +107,8 @@ export function ReportView({ event }: { event: Event }) {
       ...tableConfig,
       startY: finalY + 2,
       head: [['Source', 'Date', 'Type', 'Amount']],
-      body: event.incomes.map(i => [i.source, format(new Date(i.createdAt), 'MMM d, yyyy'), i.transactionType, `₹${i.amount.toFixed(2)}`]),
-      foot: [['Total Income', '', '', `₹${totalIncome.toFixed(2)}`]],
+      body: event.incomes.map(i => [i.source, format(new Date(i.createdAt), 'MMM d, yyyy'), i.transactionType, `Rs. ${i.amount.toFixed(2)}`]),
+      foot: [['Total Income', '', '', `Rs. ${totalIncome.toFixed(2)}`]],
     });
     finalY = (doc as any).lastAutoTable.finalY + 15;
 
@@ -118,8 +120,8 @@ export function ReportView({ event }: { event: Event }) {
       ...tableConfig,
       startY: finalY + 2,
       head: [['Notes', 'Created At', 'Type', 'Amount']],
-      body: event.expenses.map(e => [e.notes || '-', format(new Date(e.createdAt), 'MMM d, yyyy'), e.transactionType, `₹${e.amount.toFixed(2)}`]),
-      foot: [['Total Expenses', '', '', `₹${totalExpenses.toFixed(2)}`]],
+      body: event.expenses.map(e => [e.notes || '-', format(new Date(e.createdAt), 'MMM d, yyyy'), e.transactionType, `Rs. ${e.amount.toFixed(2)}`]),
+      foot: [['Total Expenses', '', '', `Rs. ${totalExpenses.toFixed(2)}`]],
     });
 
     doc.save(`report-${event.name.toLowerCase().replace(/ /g, '-')}.pdf`);
@@ -247,6 +249,5 @@ export function ReportView({ event }: { event: Event }) {
       </Card>
     </div>
   );
-}
 
     
