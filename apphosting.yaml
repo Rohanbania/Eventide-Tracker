@@ -1,7 +1,33 @@
 # Settings to manage and configure a Firebase App Hosting backend.
 # https://firebase.google.com/docs/app-hosting/configure
 
+# The identifier of the backend, used to identify the backend
+# when deploying using the Firebase CLI.
+id: eventide-tracker
+# The region to run the backend in.
+region: us-central1
+# The name of the Cloud Run service that will be created.
+serviceName: eventide-tracker
+# The runtime to use for the backend.
+runtime: nodejs20
+
 runConfig:
-  # Increase this value if you'd like to automatically spin up
-  # more instances in response to increased traffic.
+  # Increase this value to automatically spin up more instances
+  # in response to increased traffic.
   maxInstances: 1
+
+# env:
+#   - variable: API_KEY
+#     secret: API_KEY_SECRET
+
+# Defines a schedule for the backend to receive events from Cloud Scheduler.
+# schedule:
+#   # The cron expression for the schedule.
+#   cron: "0 * * * *"
+#   # The HTTP method to use for the schedule.
+#   httpMethod: GET
+#   # The path to use for the schedule.
+#   path: /schedule
+
+# Ingress controls which traffic can reach your backend.
+# ingress: internal-and-gclb
