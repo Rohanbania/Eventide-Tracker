@@ -1,7 +1,7 @@
 
 import Link from 'next/link';
 import { format, parseISO } from 'date-fns';
-import { ArrowRight, Calendar, IndianRupee, Wallet, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { ArrowRight, Calendar, IndianRupee, Wallet, MoreVertical, Pencil, Trash2, Landmark, Coins } from 'lucide-react';
 import type { Event } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,9 +20,19 @@ interface EventCardProps {
 
 export function EventCard({ event }: EventCardProps) {
   const { deleteEvent } = useEvents();
-  const totalIncome = event.incomes.reduce((acc, income) => acc + income.amount, 0);
-  const totalExpenses = event.expenses.reduce((acc, expense) => acc + expense.amount, 0);
-  const balance = totalIncome - totalExpenses;
+
+  const cashIncomes = event.incomes.filter(i => i.transactionType === 'Cash').reduce((acc, i) => acc + i.amount, 0);
+  const bankIncomes = event.incomes.filter(i => i.transactionType === 'Bank').reduce((acc, i) => acc + i.amount, 0);
+  const totalIncome = cashIncomes + bankIncomes;
+
+  const cashExpenses = event.expenses.filter(e => e.transactionType === 'Cash').reduce((acc, e) => acc + e.amount, 0);
+  const bankExpenses = event.expenses.filter(e => e.transactionType === 'Bank').reduce((acc, e) => acc + e.amount, 0);
+  const totalExpenses = cashExpenses + bankExpenses;
+  
+  const cashBalance = cashIncomes - cashExpenses;
+  const bankBalance = bankIncomes - bankExpenses;
+  const totalBalance = totalIncome - totalExpenses;
+
 
   const handleDelete = async () => {
     try {
@@ -90,39 +100,57 @@ export function EventCard({ event }: EventCardProps) {
             </DropdownMenu>
       </CardHeader>
        <Link href={`/events/${event.id}`} className="block group flex-grow">
-        <CardContent className="flex-grow space-y-3">
-          <div className="flex justify-between items-center text-sm">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <IndianRupee className="w-4 h-4 text-green-500" />
-              <span>Total Income</span>
+        <CardContent className="flex-grow space-y-4">
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <IndianRupee className="w-4 h-4 text-green-500" />
+                <span>Total Income</span>
+              </div>
+              <span className="font-mono font-medium text-base">₹{totalIncome.toLocaleString('en-IN')}</span>
             </div>
-            <span className="font-mono font-medium text-base">₹{totalIncome.toLocaleString('en-IN')}</span>
-          </div>
-          <div className="flex justify-between items-center text-sm">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <IndianRupee className="w-4 h-4 text-red-500" />
-              <span>Total Expenses</span>
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <IndianRupee className="w-4 h-4 text-red-500" />
+                <span>Total Expenses</span>
+              </div>
+              <span className="font-mono font-medium text-base">₹{totalExpenses.toLocaleString('en-IN')}</span>
             </div>
-            <span className="font-mono font-medium text-base">₹{totalExpenses.toLocaleString('en-IN')}</span>
           </div>
-          <div className="pt-2">
-            <Separator />
-          </div>
-           <div className="flex justify-between items-center text-sm font-semibold pt-1">
-            <div className="flex items-center gap-2 text-muted-foreground">
-               <Wallet className={`w-4 h-4 ${balance >= 0 ? 'text-blue-500' : 'text-orange-500'}`} />
-              <span>Balance</span>
-            </div>
-            <span className="font-mono text-base">₹{balance.toLocaleString('en-IN')}</span>
+          
+          <Separator />
+          
+           <div className="space-y-2 text-sm font-semibold">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Coins className={`w-4 h-4 ${cashBalance >= 0 ? 'text-blue-500' : 'text-orange-500'}`} />
+                  <span>Cash Balance</span>
+                </div>
+                <span className="font-mono text-base">₹{cashBalance.toLocaleString('en-IN')}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Landmark className={`w-4 h-4 ${bankBalance >= 0 ? 'text-blue-500' : 'text-orange-500'}`} />
+                  <span>Bank Balance</span>
+                </div>
+                <span className="font-mono text-base">₹{bankBalance.toLocaleString('en-IN')}</span>
+              </div>
+              <div className="flex justify-between items-center pt-2 border-t border-dashed">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Wallet className={`w-4 h-4 ${totalBalance >= 0 ? 'text-blue-500' : 'text-orange-500'}`} />
+                  <span>Total Balance</span>
+                </div>
+                <span className="font-mono text-base">₹{totalBalance.toLocaleString('en-IN')}</span>
+              </div>
           </div>
         </CardContent>
        </Link>
-      <CardFooter className="flex-col items-stretch space-y-2">
+      <CardFooter className="flex-col items-stretch space-y-2 pt-4">
          <Link href={`/events/${event.id}`} className="block group">
-            <div className="flex items-center text-sm font-semibold text-primary-foreground/80 group-hover:text-accent-foreground">
+            <Button variant="link" className="p-0 h-auto justify-start text-sm font-semibold text-primary-foreground/80 group-hover:text-accent-foreground">
                 View Details
-                <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
-            </div>
+                <ArrowRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
+            </Button>
          </Link>
          <div className="flex gap-2 pt-2 border-t">
             <AddExpenseDialog event={event}>
