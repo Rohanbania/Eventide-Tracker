@@ -49,7 +49,8 @@ export function ReportView({ event }: { event: Event }) {
 
     let finalY = 0;
 
-    doc.setFont('helvetica');
+    // Use a font that supports the Rupee symbol, like "helvetica"
+    doc.setFont('helvetica', 'normal');
     
     // Header
     doc.setFontSize(22);
@@ -65,7 +66,12 @@ export function ReportView({ event }: { event: Event }) {
 
     finalY = 55;
 
-    const formatCurrency = (amount: number) => `₹${amount.toFixed(2)}`;
+    // A helper function to format currency correctly for the PDF.
+    const formatCurrency = (amount: number) => {
+        // Use toLocaleString to handle formatting and the Rupee symbol.
+        return `₹${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    };
+
 
     // Summary Cards
     autoTable(doc, {
