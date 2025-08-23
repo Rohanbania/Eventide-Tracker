@@ -68,8 +68,7 @@ export function ReportView({ event }: { event: Event }) {
 
     // A helper function to format currency correctly for the PDF.
     const formatCurrency = (amount: number) => {
-        // Use toLocaleString to handle formatting and the Rupee symbol.
-        return `₹${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        return `INR ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     };
 
 
@@ -310,3 +309,5 @@ export function ReportView({ event }: { event: Event }) {
     </div>
   );
 }
+
+    
