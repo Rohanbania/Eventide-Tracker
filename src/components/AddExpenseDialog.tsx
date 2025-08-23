@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetTrigger } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
@@ -26,13 +26,13 @@ const formSchema = z.object({
   transactionType: z.enum(['Cash', 'Bank']),
 });
 
-interface AddExpenseSheetProps {
+interface AddExpenseDialogProps {
   event: Event;
   expenseToEdit?: Expense;
   children: React.ReactNode;
 }
 
-export function AddExpenseSheet({ event, expenseToEdit, children }: AddExpenseSheetProps) {
+export function AddExpenseDialog({ event, expenseToEdit, children }: AddExpenseDialogProps) {
   const [open, setOpen] = useState(false);
   const { addExpense, updateExpense } = useEvents();
   const isEditMode = !!expenseToEdit;
@@ -43,15 +43,17 @@ export function AddExpenseSheet({ event, expenseToEdit, children }: AddExpenseSh
   });
 
   useEffect(() => {
-    if (isEditMode && expenseToEdit) {
-        form.reset({
-            notes: expenseToEdit.notes,
-            amount: expenseToEdit.amount,
-            createdAt: new Date(expenseToEdit.createdAt),
-            transactionType: expenseToEdit.transactionType,
-        });
-    } else {
-        form.reset({ notes: '', amount: 0, createdAt: new Date(), transactionType: 'Cash' });
+    if (open) {
+        if (isEditMode && expenseToEdit) {
+            form.reset({
+                notes: expenseToEdit.notes,
+                amount: expenseToEdit.amount,
+                createdAt: new Date(expenseToEdit.createdAt),
+                transactionType: expenseToEdit.transactionType,
+            });
+        } else {
+            form.reset({ notes: '', amount: 0, createdAt: new Date(), transactionType: 'Cash' });
+        }
     }
   }, [expenseToEdit, isEditMode, form, open]);
 
@@ -70,15 +72,15 @@ export function AddExpenseSheet({ event, expenseToEdit, children }: AddExpenseSh
   };
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>{children}</SheetTrigger>
-      <SheetContent>
-        <SheetHeader>
-          <SheetTitle className="font-headline">{isEditMode ? 'Edit' : 'Add'} Expense for {event.name}</SheetTitle>
-          <SheetDescription>Quickly {isEditMode ? 'update' : 'add'} an expense for this event.</SheetDescription>
-        </SheetHeader>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="font-headline">{isEditMode ? 'Edit' : 'Add'} Expense for {event.name}</DialogTitle>
+          <DialogDescription>Quickly {isEditMode ? 'update' : 'add'} an expense for this event.</DialogDescription>
+        </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-8">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
              <FormField
               control={form.control}
               name="transactionType"
@@ -173,20 +175,20 @@ export function AddExpenseSheet({ event, expenseToEdit, children }: AddExpenseSh
                 <FormItem>
                   <FormLabel>Notes (Optional)</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="e.g., Booth rental fee" {...field} rows={4} />
+                    <Textarea placeholder="e.g., Booth rental fee" {...field} rows={3} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <SheetFooter>
+            <DialogFooter>
               <Button type="submit" className="w-full">
                 {isEditMode ? 'Save Changes' : 'Save Expense'}
               </Button>
-            </SheetFooter>
+            </DialogFooter>
           </form>
         </Form>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }

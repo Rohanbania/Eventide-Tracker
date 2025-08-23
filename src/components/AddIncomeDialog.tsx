@@ -10,7 +10,7 @@ import type { Event, Income } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetTrigger } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
@@ -25,13 +25,13 @@ const formSchema = z.object({
   transactionType: z.enum(['Cash', 'Bank']),
 });
 
-interface AddIncomeSheetProps {
+interface AddIncomeDialogProps {
   event: Event;
   incomeToEdit?: Income;
   children: React.ReactNode;
 }
 
-export function AddIncomeSheet({ event, incomeToEdit, children }: AddIncomeSheetProps) {
+export function AddIncomeDialog({ event, incomeToEdit, children }: AddIncomeDialogProps) {
   const [open, setOpen] = useState(false);
   const { addIncome, updateIncome } = useEvents();
   const isEditMode = !!incomeToEdit;
@@ -42,15 +42,17 @@ export function AddIncomeSheet({ event, incomeToEdit, children }: AddIncomeSheet
   });
 
   useEffect(() => {
-    if (isEditMode && incomeToEdit) {
-        form.reset({
-            source: incomeToEdit.source,
-            amount: incomeToEdit.amount,
-            createdAt: new Date(incomeToEdit.createdAt),
-            transactionType: incomeToEdit.transactionType,
-        });
-    } else {
-        form.reset({ source: '', amount: 0, createdAt: new Date(), transactionType: 'Cash' });
+    if (open) {
+      if (isEditMode && incomeToEdit) {
+          form.reset({
+              source: incomeToEdit.source,
+              amount: incomeToEdit.amount,
+              createdAt: new Date(incomeToEdit.createdAt),
+              transactionType: incomeToEdit.transactionType,
+          });
+      } else {
+          form.reset({ source: '', amount: 0, createdAt: new Date(), transactionType: 'Cash' });
+      }
     }
   }, [incomeToEdit, isEditMode, form, open]);
 
@@ -70,15 +72,15 @@ export function AddIncomeSheet({ event, incomeToEdit, children }: AddIncomeSheet
   };
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>{children}</SheetTrigger>
-      <SheetContent>
-        <SheetHeader>
-          <SheetTitle className="font-headline">{isEditMode ? 'Edit' : 'Add'} Income for {event.name}</SheetTitle>
-          <SheetDescription>Quickly {isEditMode ? 'update' : 'add'} an income source for this event.</SheetDescription>
-        </SheetHeader>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="font-headline">{isEditMode ? 'Edit' : 'Add'} Income for {event.name}</DialogTitle>
+          <DialogDescription>Quickly {isEditMode ? 'update' : 'add'} an income source for this event.</DialogDescription>
+        </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-8">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="transactionType"
@@ -179,14 +181,14 @@ export function AddIncomeSheet({ event, incomeToEdit, children }: AddIncomeSheet
                 </FormItem>
               )}
             />
-            <SheetFooter>
+            <DialogFooter>
               <Button type="submit" className="w-full">
                 {isEditMode ? 'Save Changes' : 'Save Income'}
               </Button>
-            </SheetFooter>
+            </DialogFooter>
           </form>
         </Form>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }

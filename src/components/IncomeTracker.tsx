@@ -1,26 +1,16 @@
 
 "use client";
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { useEvents } from '@/contexts/EventContext';
-import type { Event, Income } from '@/lib/types';
+import type { Event } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption, TableFooter } from '@/components/ui/table';
 import { IndianRupee, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
-import { Calendar as CalendarIcon } from "lucide-react"
-import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { Badge } from './ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
-import { AddIncomeSheet } from './AddIncomeSheet';
+import { AddIncomeDialog } from './AddIncomeDialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 import { toast } from '@/hooks/use-toast';
 
@@ -40,21 +30,21 @@ export function IncomeTracker({ event }: { event: Event }) {
 
 
   return (
-    <div className="grid lg:grid-cols-3 gap-8">
-      <div className="lg:col-span-1">
+    <div className="grid md:grid-cols-3 gap-8">
+      <div className="md:col-span-1">
         <Card>
           <CardHeader>
             <CardTitle className="font-headline">Record Income</CardTitle>
             <CardDescription>Add a new source of revenue from this event.</CardDescription>
           </CardHeader>
           <CardContent>
-            <AddIncomeSheet event={event}>
+            <AddIncomeDialog event={event}>
                 <Button className="w-full">Add New Income</Button>
-            </AddIncomeSheet>
+            </AddIncomeDialog>
           </CardContent>
         </Card>
       </div>
-      <div className="lg:col-span-2">
+      <div className="md:col-span-2">
         <h3 className="text-2xl font-headline mb-4 flex items-center gap-2">
             <IndianRupee className="w-6 h-6" /> Income Entries
         </h3>
@@ -89,11 +79,11 @@ export function IncomeTracker({ event }: { event: Event }) {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <AddIncomeSheet event={event} incomeToEdit={income}>
+                        <AddIncomeDialog event={event} incomeToEdit={income}>
                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                               <Pencil className="mr-2 h-4 w-4" /> Edit
                            </DropdownMenuItem>
-                        </AddIncomeSheet>
+                        </AddIncomeDialog>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <DropdownMenuItem className="text-destructive focus:bg-destructive/10" onSelect={(e) => e.preventDefault()}>

@@ -5,8 +5,8 @@ import { ArrowRight, Calendar, IndianRupee, Wallet, MoreVertical, Pencil, Trash2
 import type { Event } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AddExpenseSheet } from './AddExpenseSheet';
-import { AddIncomeSheet } from './AddIncomeSheet';
+import { AddExpenseDialog } from './AddExpenseDialog';
+import { AddIncomeDialog } from './AddIncomeDialog';
 import { Separator } from './ui/separator';
 import { CreateEventDialog } from './CreateEventDialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
@@ -125,12 +125,12 @@ export function EventCard({ event }: EventCardProps) {
             </div>
          </Link>
          <div className="flex gap-2 pt-2 border-t">
-            <AddExpenseSheet event={event}>
+            <AddExpenseDialog event={event}>
                 <Button variant="outline" size="sm" className="w-full">Add Expense</Button>
-            </AddExpenseSheet>
-            <AddIncomeSheet event={event}>
+            </AddExpenseDialog>
+            <AddIncomeDialog event={event}>
                 <Button variant="outline" size="sm" className="w-full">Add Income</Button>
-            </AddIncomeSheet>
+            </AddIncomeDialog>
          </div>
       </CardFooter>
     </Card>
