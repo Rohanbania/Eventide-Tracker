@@ -29,8 +29,8 @@ export function ExpenseTracker({ event }: { event: Event }) {
   const totalExpenses = event.expenses.reduce((sum, expense) => sum + expense.amount, 0);
 
   return (
-    <div className="grid lg:grid-cols-3 gap-8">
-      <div className="lg:col-span-1">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="md:col-span-1">
         <Card>
           <CardHeader>
             <CardTitle className="font-headline">Record Expense</CardTitle>
@@ -43,7 +43,7 @@ export function ExpenseTracker({ event }: { event: Event }) {
           </CardContent>
         </Card>
       </div>
-      <div className="lg:col-span-2">
+      <div className="md:col-span-2">
         <h3 className="text-2xl font-headline mb-4 flex items-center gap-2">
             <IndianRupee className="w-6 h-6" /> Expense Entries
         </h3>
