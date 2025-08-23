@@ -9,10 +9,6 @@
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
-    ],
-    "frameworksBackend": {
-      "id": "eventide-tracker",
-      "region": "us-central1"
-    }
+    ]
   }
 }
