@@ -2,7 +2,6 @@
 "use client";
 
 import { useState } from 'react';
-import { useEvents } from '@/contexts/EventContext';
 import type { Event } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +12,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts"
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
+import { useEvents } from '@/contexts/EventContext';
 
 const chartConfig = {
   amount: {
@@ -24,6 +25,7 @@ const chartConfig = {
 export function ReportView({ event }: { event: Event }) {
   const { generateExpenseSummary } = useEvents();
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleGenerateSummary = async () => {
     setIsLoading(true);
@@ -124,7 +126,18 @@ export function ReportView({ event }: { event: Event }) {
       foot: [['Total Expenses', '', '', `Rs. ${totalExpenses.toFixed(2)}`]],
     });
 
+    const pdfOutput = doc.output('datauristring');
     doc.save(`report-${event.name.toLowerCase().replace(/ /g, '-')}.pdf`);
+    
+    toast({
+        title: "Download Complete",
+        description: "Your PDF report has been downloaded.",
+        action: (
+          <Button variant="secondary" size="sm" onClick={() => window.open(pdfOutput)}>
+            View
+          </Button>
+        ),
+      });
   };
 
   const totalIncome = event.incomes.reduce((sum, income) => sum + income.amount, 0);
@@ -249,5 +262,6 @@ export function ReportView({ event }: { event: Event }) {
       </Card>
     </div>
   );
+}
 
     
