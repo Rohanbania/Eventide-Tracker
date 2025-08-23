@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Sparkles, BarChart2, FileText, IndianRupee, Wallet, Download } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChartContainer, ChartConfig, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts"
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
@@ -18,7 +18,7 @@ import { useEvents } from '@/contexts/EventContext';
 const chartConfig = {
   amount: {
     label: "Income",
-    color: "hsl(var(--primary))",
+    color: "hsl(var(--chart-1))",
   },
 } satisfies ChartConfig
 
@@ -40,7 +40,10 @@ export function ReportView({ event }: { event: Event }) {
     const netProfit = totalIncome - totalExpenses;
     let finalY = 0;
 
-    // Set a font that supports the Rupee symbol.
+    // It's important to use a font that supports the characters you need.
+    // jsPDF's built-in fonts have limited character support.
+    // For broader support, you would need to embed a custom font.
+    // For this case, we will use 'helvetica' and format the currency symbol manually.
     doc.setFont('helvetica');
     
     // Header
@@ -57,13 +60,15 @@ export function ReportView({ event }: { event: Event }) {
 
     finalY = 55;
 
+    const formatCurrency = (amount: number) => `Rs. ${amount.toFixed(2)}`;
+
     // Summary Cards
     autoTable(doc, {
       startY: finalY,
       body: [[
-        { content: `Total Income\nRs. ${totalIncome.toFixed(2)}`, styles: { halign: 'center', fontStyle: 'bold' } },
-        { content: `Total Expenses\nRs. ${totalExpenses.toFixed(2)}`, styles: { halign: 'center', fontStyle: 'bold' } },
-        { content: `Net Profit\nRs. ${netProfit.toFixed(2)}`, styles: { halign: 'center', fontStyle: 'bold' } },
+        { content: `Total Income\n${formatCurrency(totalIncome)}`, styles: { halign: 'center', fontStyle: 'bold' } },
+        { content: `Total Expenses\n${formatCurrency(totalExpenses)}`, styles: { halign: 'center', fontStyle: 'bold' } },
+        { content: `Net Profit\n${formatCurrency(netProfit)}`, styles: { halign: 'center', fontStyle: 'bold' } },
       ]],
       theme: 'grid',
       styles: {
@@ -109,8 +114,8 @@ export function ReportView({ event }: { event: Event }) {
       ...tableConfig,
       startY: finalY + 2,
       head: [['Source', 'Date', 'Type', 'Amount']],
-      body: event.incomes.map(i => [i.source, format(new Date(i.createdAt), 'MMM d, yyyy'), i.transactionType, `Rs. ${i.amount.toFixed(2)}`]),
-      foot: [['Total Income', '', '', `Rs. ${totalIncome.toFixed(2)}`]],
+      body: event.incomes.map(i => [i.source, format(new Date(i.createdAt), 'MMM d, yyyy'), i.transactionType, formatCurrency(i.amount)]),
+      foot: [['Total Income', '', '', formatCurrency(totalIncome)]],
     });
     finalY = (doc as any).lastAutoTable.finalY + 15;
 
@@ -122,8 +127,8 @@ export function ReportView({ event }: { event: Event }) {
       ...tableConfig,
       startY: finalY + 2,
       head: [['Notes', 'Created At', 'Type', 'Amount']],
-      body: event.expenses.map(e => [e.notes || '-', format(new Date(e.createdAt), 'MMM d, yyyy'), e.transactionType, `Rs. ${e.amount.toFixed(2)}`]),
-      foot: [['Total Expenses', '', '', `Rs. ${totalExpenses.toFixed(2)}`]],
+      body: event.expenses.map(e => [e.notes || '-', format(new Date(e.createdAt), 'MMM d, yyyy'), e.transactionType, formatCurrency(e.amount)]),
+      foot: [['Total Expenses', '', '', formatCurrency(totalExpenses)]],
     });
 
     const pdfOutput = doc.output('datauristring');
@@ -157,42 +162,42 @@ export function ReportView({ event }: { event: Event }) {
                 Download PDF
             </Button>
         </div>
-       <div className="grid md:grid-cols-3 gap-8">
+       <div className="grid md:grid-cols-3 gap-4 md:gap-8">
         <Card>
           <CardHeader>
-            <CardTitle className="font-headline flex items-center gap-2">
-              <IndianRupee className="w-6 h-6 text-green-500" />
+            <CardTitle className="font-headline flex items-center gap-2 text-lg md:text-xl">
+              <IndianRupee className="w-5 h-5 md:w-6 md:h-6 text-green-500" />
               Total Income
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-4xl font-bold font-mono text-primary-foreground/90">
+            <p className="text-2xl md:text-4xl font-bold font-mono text-primary-foreground/90">
               ₹{totalIncome.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="font-headline flex items-center gap-2">
-              <IndianRupee className="w-6 h-6 text-red-500" />
+            <CardTitle className="font-headline flex items-center gap-2 text-lg md:text-xl">
+              <IndianRupee className="w-5 h-5 md:w-6 md:h-6 text-red-500" />
               Total Expenses
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-4xl font-bold font-mono text-destructive/90">
+            <p className="text-2xl md:text-4xl font-bold font-mono text-destructive/90">
               ₹{totalExpenses.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </CardContent>
         </Card>
          <Card>
           <CardHeader>
-            <CardTitle className="font-headline flex items-center gap-2">
-              <Wallet className={`w-6 h-6 ${netProfit >= 0 ? 'text-blue-500' : 'text-orange-500'}`} />
+            <CardTitle className="font-headline flex items-center gap-2 text-lg md:text-xl">
+              <Wallet className={`w-5 h-5 md:w-6 md:h-6 ${netProfit >= 0 ? 'text-blue-500' : 'text-orange-500'}`} />
               Net Profit
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className={`text-4xl font-bold font-mono ${netProfit >= 0 ? 'text-primary-foreground/90' : 'text-destructive/90'}`}>
+            <p className={`text-2xl md:text-4xl font-bold font-mono ${netProfit >= 0 ? 'text-primary-foreground/90' : 'text-destructive/90'}`}>
               ₹{netProfit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </CardContent>
@@ -240,20 +245,22 @@ export function ReportView({ event }: { event: Event }) {
         </CardHeader>
         <CardContent>
           {chartData.length > 0 ? (
-            <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
-              <BarChart accessibilityLayer data={chartData}>
-                <CartesianGrid vertical={false} />
-                <XAxis
-                  dataKey="source"
-                  tickLine={false}
-                  tickMargin={10}
-                  axisLine={false}
-                  tickFormatter={(value) => value.slice(0, 10) + (value.length > 10 ? '...' : '')}
-                />
-                  <YAxis tickFormatter={(value) => `₹${value}`} />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="amount" fill="var(--color-amount)" radius={4} />
-              </BarChart>
+             <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+                <ResponsiveContainer>
+                    <BarChart accessibilityLayer data={chartData} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
+                        <CartesianGrid vertical={false} />
+                        <XAxis
+                        dataKey="source"
+                        tickLine={false}
+                        tickMargin={10}
+                        axisLine={false}
+                        tickFormatter={(value) => value.slice(0, 10) + (value.length > 10 ? '...' : '')}
+                        />
+                        <YAxis tickFormatter={(value) => `₹${value / 1000}k`} />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Bar dataKey="amount" fill="var(--color-amount)" radius={4} />
+                    </BarChart>
+                </ResponsiveContainer>
             </ChartContainer>
           ) : (
             <p className="text-muted-foreground text-center py-8">No income data to display.</p>
@@ -263,5 +270,3 @@ export function ReportView({ event }: { event: Event }) {
     </div>
   );
 }
-
-    

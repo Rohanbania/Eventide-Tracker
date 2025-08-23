@@ -40,8 +40,8 @@ export function IncomeTracker({ event }: { event: Event }) {
 
 
   return (
-    <div className="grid md:grid-cols-3 gap-8">
-      <div className="md:col-span-1">
+    <div className="grid lg:grid-cols-3 gap-8">
+      <div className="lg:col-span-1">
         <Card>
           <CardHeader>
             <CardTitle className="font-headline">Record Income</CardTitle>
@@ -54,11 +54,11 @@ export function IncomeTracker({ event }: { event: Event }) {
           </CardContent>
         </Card>
       </div>
-      <div className="md:col-span-2">
+      <div className="lg:col-span-2">
         <h3 className="text-2xl font-headline mb-4 flex items-center gap-2">
             <IndianRupee className="w-6 h-6" /> Income Entries
         </h3>
-        <Card>
+        <Card className="overflow-x-auto">
           <Table>
             {event.incomes.length === 0 && <TableCaption>No income recorded yet.</TableCaption>}
             <TableHeader>
@@ -73,14 +73,14 @@ export function IncomeTracker({ event }: { event: Event }) {
             <TableBody>
               {event.incomes.map((income) => (
                 <TableRow key={income.id} className="animate-in fade-in-0">
-                  <TableCell className="font-medium">{income.source}</TableCell>
+                  <TableCell className="font-medium whitespace-nowrap">{income.source}</TableCell>
                   <TableCell>
                     <Badge variant={income.transactionType === 'Bank' ? 'secondary' : 'outline'}>
                       {income.transactionType}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{format(new Date(income.createdAt), 'MMM d, yyyy')}</TableCell>
-                  <TableCell className="text-right font-mono">₹{income.amount.toFixed(2)}</TableCell>
+                  <TableCell className="text-muted-foreground whitespace-nowrap">{format(new Date(income.createdAt), 'MMM d, yyyy')}</TableCell>
+                  <TableCell className="text-right font-mono whitespace-nowrap">₹{income.amount.toFixed(2)}</TableCell>
                    <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -119,12 +119,14 @@ export function IncomeTracker({ event }: { event: Event }) {
                 </TableRow>
               ))}
             </TableBody>
-            <TableFooter>
-                <TableRow>
-                    <TableCell colSpan={4} className="font-bold text-lg">Total Income</TableCell>
-                    <TableCell className="text-right font-bold font-mono text-lg">₹{totalIncome.toFixed(2)}</TableCell>
-                </TableRow>
-            </TableFooter>
+             {event.incomes.length > 0 && (
+                <TableFooter>
+                    <TableRow>
+                        <TableCell colSpan={4} className="font-bold text-lg">Total Income</TableCell>
+                        <TableCell className="text-right font-bold font-mono text-lg whitespace-nowrap">₹{totalIncome.toFixed(2)}</TableCell>
+                    </TableRow>
+                </TableFooter>
+             )}
           </Table>
         </Card>
       </div>

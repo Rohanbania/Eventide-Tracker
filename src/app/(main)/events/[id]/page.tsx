@@ -61,18 +61,24 @@ export default function EventDetailPage() {
   return (
     <div className="container mx-auto px-4 py-8 animate-in fade-in-0">
       <div className="mb-8">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-            <h1 className="text-5xl font-headline tracking-tighter">{event.name}</h1>
-             <div className="flex items-center gap-2">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex-1">
+                <h1 className="text-4xl md:text-5xl font-headline tracking-tighter">{event.name}</h1>
+                 <p className="text-lg text-muted-foreground flex items-center gap-2 mt-2">
+                  <Calendar className="w-5 h-5" />
+                  {format(parseISO(event.date), 'EEEE, MMMM d, yyyy')}
+                </p>
+            </div>
+             <div className="flex items-center gap-2 self-start md:self-auto">
                 <CreateEventDialog eventToEdit={event}>
-                    <Button variant="outline">
-                        <Pencil className="mr-2 h-4 w-4" /> Edit Event
+                    <Button variant="outline" size="sm">
+                        <Pencil className="mr-2 h-4 w-4" /> Edit
                     </Button>
                 </CreateEventDialog>
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
-                        <Button variant="destructive">
-                            <Trash2 className="mr-2 h-4 w-4" /> Delete Event
+                        <Button variant="destructive" size="sm">
+                            <Trash2 className="mr-2 h-4 w-4" /> Delete
                         </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
@@ -91,17 +97,13 @@ export default function EventDetailPage() {
                 </AlertDialog>
             </div>
         </div>
-        <p className="text-lg text-muted-foreground flex items-center gap-2 mt-2">
-          <Calendar className="w-5 h-5" />
-          {format(parseISO(event.date), 'EEEE, MMMM d, yyyy')}
-        </p>
         {event.description && (
-          <p className="text-md text-foreground/80 mt-4 max-w-2xl">{event.description}</p>
+          <p className="text-md text-foreground/80 mt-4 max-w-3xl">{event.description}</p>
         )}
       </div>
 
       <Tabs defaultValue="expenses" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 md:w-fit md:grid-cols-3 mb-6">
+        <TabsList className="w-full overflow-x-auto justify-start md:w-fit md:grid md:grid-cols-3 mb-6">
           <TabsTrigger value="expenses">
             <NotebookText className="w-4 h-4 mr-2" /> Expenses
           </TabsTrigger>
@@ -125,4 +127,3 @@ export default function EventDetailPage() {
     </div>
   );
 }
-
