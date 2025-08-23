@@ -13,7 +13,6 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts"
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
-import { logoBase64 } from '@/lib/logo';
 
 const chartConfig = {
   amount: {
@@ -39,12 +38,11 @@ export function ReportView({ event }: { event: Event }) {
     const netProfit = totalIncome - totalExpenses;
     let finalY = 0;
     
-    // Header with Logo
-    doc.addImage(logoBase64, 'PNG', 14, 15, 12, 12);
+    // Header
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(22);
     doc.setTextColor(44, 62, 80);
-    doc.text("Eventide Tracker", 30, 22);
+    doc.text("Eventide Tracker", 14, 22);
 
     // Report Title
     doc.setFontSize(16);
@@ -250,3 +248,5 @@ export function ReportView({ event }: { event: Event }) {
     </div>
   );
 }
+
+    
