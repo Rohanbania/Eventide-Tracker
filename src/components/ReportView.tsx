@@ -16,6 +16,10 @@ import { useToast } from '@/hooks/use-toast';
 import { useEvents } from '@/contexts/EventContext';
 import { logoBase64 } from '@/lib/logo';
 
+const formatCurrency = (amount: number) => {
+    return `Rs ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+
 const chartConfig = {
   amount: {
     label: "Income",
@@ -23,9 +27,6 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-const formatCurrency = (amount: number) => {
-    return `Rs ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-};
 
 export function ReportView({ event }: { event: Event }) {
   const { generateExpenseSummary } = useEvents();
@@ -39,136 +40,136 @@ export function ReportView({ event }: { event: Event }) {
     setIsLoading(false);
   };
   
-  const handleDownloadPdf = async () => {
+  const handleDownloadPdf = () => {
     setIsDownloading(true);
 
-    // Allow UI to update before starting heavy task
-    await new Promise(resolve => setTimeout(resolve, 0));
+    // This ensures the UI updates to show the loading state before the heavy task starts.
+    setTimeout(() => {
+      try {
+        const doc = new jsPDF();
+        const cashIncomes = event.incomes.filter(i => i.transactionType === 'Cash').reduce((acc, i) => acc + i.amount, 0);
+        const bankIncomes = event.incomes.filter(i => i.transactionType === 'Bank').reduce((acc, i) => acc + i.amount, 0);
+        const totalIncome = cashIncomes + bankIncomes;
 
-    try {
-      const doc = new jsPDF();
-      const cashIncomes = event.incomes.filter(i => i.transactionType === 'Cash').reduce((acc, i) => acc + i.amount, 0);
-      const bankIncomes = event.incomes.filter(i => i.transactionType === 'Bank').reduce((acc, i) => acc + i.amount, 0);
-      const totalIncome = cashIncomes + bankIncomes;
+        const cashExpenses = event.expenses.filter(e => e.transactionType === 'Cash').reduce((acc, e) => acc + e.amount, 0);
+        const bankExpenses = event.expenses.filter(e => e.transactionType === 'Bank').reduce((acc, e) => acc + e.amount, 0);
+        const totalExpenses = cashExpenses + bankExpenses;
+        
+        const cashBalance = cashIncomes - cashExpenses;
+        const bankBalance = bankIncomes - bankExpenses;
+        const netProfit = totalIncome - totalExpenses;
 
-      const cashExpenses = event.expenses.filter(e => e.transactionType === 'Cash').reduce((acc, e) => acc + e.amount, 0);
-      const bankExpenses = event.expenses.filter(e => e.transactionType === 'Bank').reduce((acc, e) => acc + e.amount, 0);
-      const totalExpenses = cashExpenses + bankExpenses;
-      
-      const cashBalance = cashIncomes - cashExpenses;
-      const bankBalance = bankIncomes - bankExpenses;
-      const netProfit = totalIncome - totalExpenses;
+        let finalY = 0;
 
-      let finalY = 0;
-
-      // Header with Logo
-      if (logoBase64) {
-        doc.addImage(logoBase64, 'PNG', 14, 15, 12, 12);
-      }
-      doc.setFontSize(22);
-      doc.setTextColor(115, 169, 173); // Muted Teal
-      doc.text("Eventide Tracker", 30, 22);
-
-      // Report Title
-      doc.setFontSize(16);
-      doc.setTextColor(40, 40, 40);
-      doc.text(`Financial Report: ${event.name}`, 14, 40);
-      doc.setFontSize(12);
-      doc.setTextColor(127, 140, 141);
-      doc.text(`Event Date: ${format(new Date(event.date), 'MMMM d, yyyy')}`, 14, 48);
-
-      finalY = 55;
-
-      const tableFooter = [
-        ['Total', formatCurrency(totalIncome), formatCurrency(totalExpenses), formatCurrency(netProfit)],
-        [{ content: `Cash Balance: ${formatCurrency(cashBalance)}`, colSpan: 2, styles: { fontStyle: 'normal', fillColor: [245, 245, 245] } }, { content: `Bank Balance: ${formatCurrency(bankBalance)}`, colSpan: 2, styles: { fontStyle: 'normal', fillColor: [245, 245, 245] } }],
-      ];
-
-      autoTable(doc, {
-          startY: finalY,
-          head: [['Category', 'Income', 'Expenses', 'Balance']],
-          body: [
-              ['Cash', formatCurrency(cashIncomes), formatCurrency(cashExpenses), formatCurrency(cashBalance)],
-              ['Bank', formatCurrency(bankIncomes), formatCurrency(bankExpenses), formatCurrency(bankBalance)],
-          ],
-          foot: tableFooter,
-          theme: 'striped',
-          headStyles: { fillColor: [208, 191, 255], textColor: [40, 40, 40], fontStyle: 'bold' },
-          footStyles: { fillColor: [245, 245, 245], textColor: [40, 40, 40], fontStyle: 'bold'  }
-      });
-
-      finalY = (doc as any).lastAutoTable.finalY + 15;
-      
-      // AI Summary
-      if (event.expenseSummary) {
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        doc.text('AI Expense Summary', 14, finalY);
-        finalY += 7;
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        const splitSummary = doc.splitTextToSize(event.expenseSummary, 180);
-        doc.text(splitSummary, 14, finalY);
-        finalY += (splitSummary.length * 5) + 10;
-      }
-
-      const tableConfig = {
-        theme: 'striped' as const,
-        headStyles: { fillColor: [208, 191, 255], textColor: [40, 40, 40], fontStyle: 'bold' as const },
-        footStyles: { fillColor: [245, 245, 245], textColor: [40, 40, 40], fontStyle: 'bold' as const },
-        didDrawPage: (data: any) => {
-          doc.setFontSize(10);
-          doc.setTextColor(127, 140, 141);
-          doc.text(`Page ${doc.internal.getNumberOfPages()}`, data.settings.margin.left, doc.internal.pageSize.height - 10);
+        // Header with Logo
+        if (logoBase64) {
+          doc.addImage(logoBase64, 'PNG', 14, 15, 12, 12);
         }
-      };
-      
-      // Income Table
-      if (event.incomes.length > 0) {
+        doc.setFontSize(22);
+        doc.setTextColor(115, 169, 173); // Muted Teal
+        doc.text("Eventide Tracker", 30, 22);
+
+        // Report Title
+        doc.setFontSize(16);
+        doc.setTextColor(40, 40, 40);
+        doc.text(`Financial Report: ${event.name}`, 14, 40);
+        doc.setFontSize(12);
+        doc.setTextColor(127, 140, 141);
+        doc.text(`Event Date: ${format(new Date(event.date), 'MMMM d, yyyy')}`, 14, 48);
+
+        finalY = 55;
+
+        const tableFooter = [
+          ['Total', formatCurrency(totalIncome), formatCurrency(totalExpenses), formatCurrency(netProfit)],
+          [{ content: `Cash Balance: ${formatCurrency(cashBalance)}`, colSpan: 2, styles: { fontStyle: 'normal', fillColor: [245, 245, 245] } }, { content: `Bank Balance: ${formatCurrency(bankBalance)}`, colSpan: 2, styles: { fontStyle: 'normal', fillColor: [245, 245, 245] } }],
+        ];
+
+        autoTable(doc, {
+            startY: finalY,
+            head: [['Category', 'Income', 'Expenses', 'Balance']],
+            body: [
+                ['Cash', formatCurrency(cashIncomes), formatCurrency(cashExpenses), formatCurrency(cashBalance)],
+                ['Bank', formatCurrency(bankIncomes), formatCurrency(bankExpenses), formatCurrency(bankBalance)],
+            ],
+            foot: tableFooter,
+            theme: 'striped',
+            headStyles: { fillColor: [208, 191, 255], textColor: [40, 40, 40], fontStyle: 'bold' },
+            footStyles: { fillColor: [245, 245, 245], textColor: [40, 40, 40], fontStyle: 'bold'  }
+        });
+
+        finalY = (doc as any).lastAutoTable.finalY + 15;
+        
+        // AI Summary
+        if (event.expenseSummary) {
           doc.setFontSize(14);
           doc.setFont('helvetica', 'bold');
-          doc.text('Income Breakdown', 14, finalY);
-          autoTable(doc, {
-          ...tableConfig,
-          startY: finalY + 2,
-          head: [['Source', 'Date', 'Type', 'Amount']],
-          body: event.incomes.map(i => [i.source, format(new Date(i.createdAt), 'MMM d, yyyy'), i.transactionType, formatCurrency(i.amount)]),
-          foot: [['Total Income', '', '', formatCurrency(totalIncome)]],
-          });
-          finalY = (doc as any).lastAutoTable.finalY + 15;
+          doc.text('AI Expense Summary', 14, finalY);
+          finalY += 7;
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'normal');
+          const splitSummary = doc.splitTextToSize(event.expenseSummary, 180);
+          doc.text(splitSummary, 14, finalY);
+          finalY += (splitSummary.length * 5) + 10;
+        }
+
+        const tableConfig = {
+          theme: 'striped' as const,
+          headStyles: { fillColor: [208, 191, 255], textColor: [40, 40, 40], fontStyle: 'bold' as const },
+          footStyles: { fillColor: [245, 245, 245], textColor: [40, 40, 40], fontStyle: 'bold' as const },
+          didDrawPage: (data: any) => {
+            doc.setFontSize(10);
+            doc.setTextColor(127, 140, 141);
+            doc.text(`Page ${doc.internal.getNumberOfPages()}`, data.settings.margin.left, doc.internal.pageSize.height - 10);
+          }
+        };
+        
+        // Income Table
+        if (event.incomes.length > 0) {
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Income Breakdown', 14, finalY);
+            autoTable(doc, {
+            ...tableConfig,
+            startY: finalY + 2,
+            head: [['Source', 'Date', 'Type', 'Amount']],
+            body: event.incomes.map(i => [i.source, format(new Date(i.createdAt), 'MMM d, yyyy'), i.transactionType, formatCurrency(i.amount)]),
+            foot: [['Total Income', '', '', formatCurrency(totalIncome)]],
+            });
+            finalY = (doc as any).lastAutoTable.finalY + 15;
+        }
+
+
+        // Expense Table
+        if (event.expenses.length > 0) {
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Expense Breakdown', 14, finalY);
+            autoTable(doc, {
+            ...tableConfig,
+            startY: finalY + 2,
+            head: [['Notes', 'Created At', 'Type', 'Amount']],
+            body: event.expenses.map(e => [e.notes || '-', format(new Date(e.createdAt), 'MMM d, yyyy'), e.transactionType, formatCurrency(e.amount)]),
+            foot: [['Total Expenses', '', '', formatCurrency(totalExpenses)]],
+            });
+        }
+
+        doc.save(`report-${event.name.toLowerCase().replace(/ /g, '-')}.pdf`);
+        
+        toast({
+            title: "Download Complete",
+            description: "Your PDF report has been downloaded.",
+        });
+      } catch (error) {
+        console.error("PDF generation failed:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to generate the PDF report."
+        });
+      } finally {
+        setIsDownloading(false);
       }
-
-
-      // Expense Table
-      if (event.expenses.length > 0) {
-          doc.setFontSize(14);
-          doc.setFont('helvetica', 'bold');
-          doc.text('Expense Breakdown', 14, finalY);
-          autoTable(doc, {
-          ...tableConfig,
-          startY: finalY + 2,
-          head: [['Notes', 'Created At', 'Type', 'Amount']],
-          body: event.expenses.map(e => [e.notes || '-', format(new Date(e.createdAt), 'MMM d, yyyy'), e.transactionType, formatCurrency(e.amount)]),
-          foot: [['Total Expenses', '', '', formatCurrency(totalExpenses)]],
-          });
-      }
-
-      doc.save(`report-${event.name.toLowerCase().replace(/ /g, '-')}.pdf`);
-      
-      toast({
-          title: "Download Complete",
-          description: "Your PDF report has been downloaded.",
-      });
-    } catch (error) {
-      console.error("PDF generation failed:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to generate the PDF report."
-      });
-    } finally {
-      setIsDownloading(false);
-    }
+    }, 100); // A small delay to allow the UI to update
   };
 
   const totalIncome = event.incomes.reduce((sum, income) => sum + income.amount, 0);
