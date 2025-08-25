@@ -14,7 +14,6 @@ import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useEvents } from '@/contexts/EventContext';
-import { logoBase64 } from '@/lib/logo';
 
 const formatCurrency = (amount: number) => {
     return `Rs ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -61,13 +60,10 @@ export function ReportView({ event }: { event: Event }) {
 
         let finalY = 0;
 
-        // Header with Logo
-        if (logoBase64) {
-          doc.addImage(logoBase64, 'PNG', 14, 15, 12, 12);
-        }
+        // Header
         doc.setFontSize(22);
         doc.setTextColor(115, 169, 173); // Muted Teal
-        doc.text("Eventide Tracker", 30, 22);
+        doc.text("Eventide Tracker", 14, 22);
 
         // Report Title
         doc.setFontSize(16);
