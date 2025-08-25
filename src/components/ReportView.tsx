@@ -54,11 +54,12 @@ export function ReportView({ event }: { event: Event }) {
     
     // Header
     doc.setFontSize(22);
-    doc.setTextColor(44, 62, 80);
+    doc.setTextColor(115, 169, 173); // Muted Teal
     doc.text("Eventide Tracker", 14, 22);
 
     // Report Title
     doc.setFontSize(16);
+    doc.setTextColor(40, 40, 40);
     doc.text(`Financial Report: ${event.name}`, 14, 40);
     doc.setFontSize(12);
     doc.setTextColor(127, 140, 141);
@@ -66,13 +67,10 @@ export function ReportView({ event }: { event: Event }) {
 
     finalY = 55;
 
-    // A helper function to format currency correctly for the PDF.
     const formatCurrency = (amount: number) => {
         return `Rs ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     };
 
-
-    // Summary Cards
     autoTable(doc, {
         startY: finalY,
         head: [['Category', 'Income', 'Expenses', 'Balance']],
@@ -81,12 +79,13 @@ export function ReportView({ event }: { event: Event }) {
             ['Bank', formatCurrency(bankIncomes), formatCurrency(bankExpenses), formatCurrency(bankBalance)],
         ],
         foot: [
-            [{ content: `Cash Balance: ${formatCurrency(cashBalance)}`, colSpan: 2, styles: { fontStyle: 'bold', halign: 'left' } },
-             { content: `Bank Balance: ${formatCurrency(bankBalance)}`, colSpan: 2, styles: { fontStyle: 'bold', halign: 'left' } }],
-            [{ content: `Net Profit: ${formatCurrency(netProfit)}`, colSpan: 4, styles: { fontStyle: 'bold', halign: 'center', fillColor: [236, 240, 241] } }]
+            [{ content: `Cash Balance: ${formatCurrency(cashBalance)}`, styles: { fontStyle: 'bold', halign: 'left' } },
+             { content: `Bank Balance: ${formatCurrency(bankBalance)}`, colSpan: 2, styles: { fontStyle: 'bold', halign: 'left' } },
+             { content: `Net Profit: ${formatCurrency(netProfit)}`, styles: { fontStyle: 'bold', halign: 'right' } }]
         ],
-        theme: 'grid',
-        headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold' },
+        theme: 'striped',
+        headStyles: { fillColor: [208, 191, 255], textColor: [40, 40, 40], fontStyle: 'bold' }, // Lavender with dark text
+        footStyles: { fillColor: [245, 245, 245], textColor: [40, 40, 40] }
     });
 
     finalY = (doc as any).lastAutoTable.finalY + 15;
@@ -99,16 +98,15 @@ export function ReportView({ event }: { event: Event }) {
       finalY += 7;
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(0);
       const splitSummary = doc.splitTextToSize(event.expenseSummary, 180);
       doc.text(splitSummary, 14, finalY);
       finalY += (splitSummary.length * 5) + 10;
     }
 
     const tableConfig = {
-      theme: 'grid',
-      headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold' },
-      footStyles: { fillColor: [236, 240, 241], textColor: 44, fontStyle: 'bold' },
+      theme: 'striped',
+      headStyles: { fillColor: [208, 191, 255], textColor: [40, 40, 40], fontStyle: 'bold' },
+      footStyles: { fillColor: [245, 245, 245], textColor: [40, 40, 40], fontStyle: 'bold' },
       didDrawPage: (data: any) => {
         doc.setFontSize(10);
         doc.setTextColor(127, 140, 141);
@@ -307,7 +305,3 @@ export function ReportView({ event }: { event: Event }) {
     </div>
   );
 }
-
-    
-
-    
