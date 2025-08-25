@@ -14,6 +14,7 @@ import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useEvents } from '@/contexts/EventContext';
+import { ToastAction } from '@/components/ui/toast';
 
 const formatCurrency = (amount: number) => {
     return `Rs ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -46,6 +47,8 @@ export function ReportView({ event }: { event: Event }) {
     setTimeout(() => {
       try {
         const doc = new jsPDF();
+        
+        // --- Document Content ---
         const cashIncomes = event.incomes.filter(i => i.transactionType === 'Cash').reduce((acc, i) => acc + i.amount, 0);
         const bankIncomes = event.incomes.filter(i => i.transactionType === 'Bank').reduce((acc, i) => acc + i.amount, 0);
         const totalIncome = cashIncomes + bankIncomes;
@@ -77,8 +80,14 @@ export function ReportView({ event }: { event: Event }) {
 
         const tableFooter = [
           ['Total', formatCurrency(totalIncome), formatCurrency(totalExpenses), formatCurrency(netProfit)],
-          [{ content: `Cash Balance: ${formatCurrency(cashBalance)}`, colSpan: 2, styles: { fontStyle: 'normal', fillColor: [245, 245, 245] } }, { content: `Bank Balance: ${formatCurrency(bankBalance)}`, colSpan: 2, styles: { fontStyle: 'normal', fillColor: [245, 245, 245] } }],
         ];
+
+        if (cashBalance !== 0 || bankBalance !== 0) {
+            tableFooter.push(
+                 [{ content: `Cash Balance: ${formatCurrency(cashBalance)}`, colSpan: 2, styles: { fontStyle: 'normal', fillColor: [245, 245, 245] } }, { content: `Bank Balance: ${formatCurrency(bankBalance)}`, colSpan: 2, styles: { fontStyle: 'normal', fillColor: [245, 245, 245] } }],
+            )
+        }
+
 
         autoTable(doc, {
             startY: finalY,
@@ -148,12 +157,16 @@ export function ReportView({ event }: { event: Event }) {
             foot: [['Total Expenses', '', '', formatCurrency(totalExpenses)]],
             });
         }
-
+        
+        const pdfDataUri = doc.output('datauristring');
         doc.save(`report-${event.name.toLowerCase().replace(/ /g, '-')}.pdf`);
         
         toast({
             title: "Download Complete",
             description: "Your PDF report has been downloaded.",
+            action: (
+              <ToastAction altText="View PDF" onClick={() => window.open(pdfDataUri)}>View PDF</ToastAction>
+            ),
         });
       } catch (error) {
         console.error("PDF generation failed:", error);
@@ -322,3 +335,5 @@ export function ReportView({ event }: { event: Event }) {
     </div>
   );
 }
+
+    
