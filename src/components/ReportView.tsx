@@ -56,7 +56,7 @@ export function ReportView({ event }: { event: Event }) {
 
     // Header with Logo
     if (logoBase64) {
-      doc.addImage(logoBase64, 'SVG', 14, 15, 12, 12);
+      doc.addImage(logoBase64, 'PNG', 14, 15, 12, 12);
     }
     doc.setFontSize(22);
     doc.setTextColor(115, 169, 173); // Muted Teal
@@ -81,16 +81,22 @@ export function ReportView({ event }: { event: Event }) {
             ['Bank', formatCurrency(bankIncomes), formatCurrency(bankExpenses), formatCurrency(bankBalance)],
         ],
         foot: [
-            [{ content: `Cash Balance: ${formatCurrency(cashBalance)}`, styles: { halign: 'left', fontStyle: 'bold' } },
-             { content: `Bank Balance: ${formatCurrency(bankBalance)}`, colSpan: 2, styles: { halign: 'center', fontStyle: 'bold' } },
-             { content: `Net Profit: ${formatCurrency(netProfit)}`, styles: { halign: 'right', fontStyle: 'bold' } }]
+             ['Total', formatCurrency(totalIncome), formatCurrency(totalExpenses), formatCurrency(netProfit)]
         ],
         theme: 'striped',
         headStyles: { fillColor: [208, 191, 255], textColor: [40, 40, 40], fontStyle: 'bold' }, // Lavender with dark text
-        footStyles: { fillColor: [245, 245, 245], textColor: [40, 40, 40] }
+        footStyles: { fillColor: [245, 245, 245], textColor: [40, 40, 40], fontStyle: 'bold'  }
     });
 
-    finalY = (doc as any).lastAutoTable.finalY + 15;
+    finalY = (doc as any).lastAutoTable.finalY + 5;
+    
+    doc.setFontSize(10);
+    doc.setTextColor(40, 40, 40);
+    const summaryText = `Cash Balance: ${formatCurrency(cashBalance)}  |  Bank Balance: ${formatCurrency(bankBalance)}  |  Net Profit: ${formatCurrency(netProfit)}`;
+    doc.text(summaryText, 14, finalY, { align: 'left' });
+
+    finalY += 15;
+
 
     // AI Summary
     if (event.expenseSummary) {
@@ -106,9 +112,9 @@ export function ReportView({ event }: { event: Event }) {
     }
 
     const tableConfig = {
-      theme: 'striped',
-      headStyles: { fillColor: [208, 191, 255], textColor: [40, 40, 40], fontStyle: 'bold' },
-      footStyles: { fillColor: [245, 245, 245], textColor: [40, 40, 40], fontStyle: 'bold' },
+      theme: 'striped' as const,
+      headStyles: { fillColor: [208, 191, 255], textColor: [40, 40, 40], fontStyle: 'bold' as const },
+      footStyles: { fillColor: [245, 245, 245], textColor: [40, 40, 40], fontStyle: 'bold' as const },
       didDrawPage: (data: any) => {
         doc.setFontSize(10);
         doc.setTextColor(127, 140, 141);
