@@ -81,14 +81,12 @@ export function ReportView({ event }: { event: Event }) {
             ['Bank', formatCurrency(bankIncomes), formatCurrency(bankExpenses), formatCurrency(bankBalance)],
         ],
         foot: [
-            [{ content: 'Total', colSpan: 1, styles: { fontStyle: 'bold' } }, 
-            formatCurrency(totalIncome), 
-            formatCurrency(totalExpenses), 
-            formatCurrency(netProfit)]
+            [{ content: `Cash Balance: ${formatCurrency(cashBalance)}`, colSpan: 2, styles: { fontStyle: 'bold', halign: 'left' } },
+             { content: `Bank Balance: ${formatCurrency(bankBalance)}`, colSpan: 2, styles: { fontStyle: 'bold', halign: 'left' } }],
+            [{ content: `Net Profit: ${formatCurrency(netProfit)}`, colSpan: 4, styles: { fontStyle: 'bold', halign: 'center', fillColor: [236, 240, 241] } }]
         ],
         theme: 'grid',
         headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold' },
-        footStyles: { fillColor: [236, 240, 241], textColor: 44, fontStyle: 'bold' },
     });
 
     finalY = (doc as any).lastAutoTable.finalY + 15;
@@ -309,5 +307,7 @@ export function ReportView({ event }: { event: Event }) {
     </div>
   );
 }
+
+    
 
     
