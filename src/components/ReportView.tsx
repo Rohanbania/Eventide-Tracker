@@ -68,7 +68,7 @@ export function ReportView({ event }: { event: Event }) {
 
     // A helper function to format currency correctly for the PDF.
     const formatCurrency = (amount: number) => {
-        return `INR ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        return `Rs ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     };
 
 
