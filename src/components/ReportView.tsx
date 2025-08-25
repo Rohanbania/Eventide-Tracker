@@ -14,6 +14,7 @@ import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useEvents } from '@/contexts/EventContext';
+import { logoBase64 } from '@/lib/logo';
 
 const chartConfig = {
   amount: {
@@ -49,13 +50,17 @@ export function ReportView({ event }: { event: Event }) {
 
     let finalY = 0;
 
-    // Use a font that supports the Rupee symbol, like "helvetica"
-    doc.setFont('helvetica', 'normal');
-    
-    // Header
+    const formatCurrency = (amount: number) => {
+        return `Rs ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    };
+
+    // Header with Logo
+    if (logoBase64) {
+      doc.addImage(logoBase64, 'SVG', 14, 15, 12, 12);
+    }
     doc.setFontSize(22);
     doc.setTextColor(115, 169, 173); // Muted Teal
-    doc.text("Eventide Tracker", 14, 22);
+    doc.text("Eventide Tracker", 30, 22);
 
     // Report Title
     doc.setFontSize(16);
@@ -67,9 +72,6 @@ export function ReportView({ event }: { event: Event }) {
 
     finalY = 55;
 
-    const formatCurrency = (amount: number) => {
-        return `Rs ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    };
 
     autoTable(doc, {
         startY: finalY,
@@ -79,9 +81,9 @@ export function ReportView({ event }: { event: Event }) {
             ['Bank', formatCurrency(bankIncomes), formatCurrency(bankExpenses), formatCurrency(bankBalance)],
         ],
         foot: [
-            [{ content: `Cash Balance: ${formatCurrency(cashBalance)}`, styles: { fontStyle: 'bold', halign: 'left' } },
-             { content: `Bank Balance: ${formatCurrency(bankBalance)}`, colSpan: 2, styles: { fontStyle: 'bold', halign: 'left' } },
-             { content: `Net Profit: ${formatCurrency(netProfit)}`, styles: { fontStyle: 'bold', halign: 'right' } }]
+            [{ content: `Cash Balance: ${formatCurrency(cashBalance)}`, styles: { halign: 'left', fontStyle: 'bold' } },
+             { content: `Bank Balance: ${formatCurrency(bankBalance)}`, colSpan: 2, styles: { halign: 'center', fontStyle: 'bold' } },
+             { content: `Net Profit: ${formatCurrency(netProfit)}`, styles: { halign: 'right', fontStyle: 'bold' } }]
         ],
         theme: 'striped',
         headStyles: { fillColor: [208, 191, 255], textColor: [40, 40, 40], fontStyle: 'bold' }, // Lavender with dark text
@@ -194,7 +196,7 @@ export function ReportView({ event }: { event: Event }) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl md:text-4xl font-bold font-mono text-primary-foreground/90">
-              ₹{cashBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {formatCurrency(cashBalance)}
             </p>
           </CardContent>
         </Card>
@@ -207,7 +209,7 @@ export function ReportView({ event }: { event: Event }) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl md:text-4xl font-bold font-mono text-primary-foreground/90">
-              ₹{bankBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {formatCurrency(bankBalance)}
             </p>
           </CardContent>
         </Card>
@@ -220,7 +222,7 @@ export function ReportView({ event }: { event: Event }) {
           </CardHeader>
           <CardContent>
             <p className={`text-2xl md:text-4xl font-bold font-mono text-primary-foreground/90`}>
-              ₹{totalIncome.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {formatCurrency(totalIncome)}
             </p>
           </CardContent>
         </Card>
@@ -233,7 +235,7 @@ export function ReportView({ event }: { event: Event }) {
           </CardHeader>
           <CardContent>
             <p className={`text-2xl md:text-4xl font-bold font-mono ${netProfit >= 0 ? 'text-primary-foreground/90' : 'text-destructive/90'}`}>
-              ₹{netProfit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {formatCurrency(netProfit)}
             </p>
           </CardContent>
         </Card>
