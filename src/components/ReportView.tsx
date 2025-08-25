@@ -23,6 +23,10 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
+const formatCurrency = (amount: number) => {
+    return `Rs ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+
 export function ReportView({ event }: { event: Event }) {
   const { generateExpenseSummary } = useEvents();
   const [isLoading, setIsLoading] = useState(false);
@@ -49,10 +53,6 @@ export function ReportView({ event }: { event: Event }) {
     const netProfit = totalIncome - totalExpenses;
 
     let finalY = 0;
-
-    const formatCurrency = (amount: number) => {
-        return `Rs ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    };
 
     // Header with Logo
     if (logoBase64) {
