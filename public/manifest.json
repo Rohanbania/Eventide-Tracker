@@ -1,20 +1,19 @@
 {
-  "theme_color": "#f6f2ff",
-  "background_color": "#f6f2ff",
-  "display": "standalone",
-  "scope": "/",
-  "start_url": "/",
   "name": "Eventide Tracker",
   "short_name": "Eventide",
-  "description": "Track expenses and income for your events.",
+  "description": "Track experiences and income for your events.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#DBBFFF",
   "icons": [
     {
-      "src": "/icons/icon-192x192.png",
+      "src": "/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/icons/icon-512x512.png",
+      "src": "/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
