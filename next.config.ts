@@ -1,6 +1,10 @@
 import type {NextConfig} from 'next';
+
+const isDev = process.env.NODE_ENV !== 'production';
+
 const withPWA = require('next-pwa')({
-  dest: 'public'
+  dest: 'public',
+  disable: isDev,
 })
 
 const nextConfig: NextConfig = {
