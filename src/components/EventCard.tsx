@@ -51,116 +51,118 @@ export function EventCard({ event }: EventCardProps) {
   };
 
   return (
-    <Card className="h-full flex flex-col transition-all duration-300 hover:shadow-primary/20 hover:shadow-lg">
-      <CardHeader className="flex-row items-start justify-between">
-          <div>
-            <CardTitle className="font-headline text-2xl tracking-wide leading-tight group">
-                <Link href={`/events/${event.id}`} className="hover:underline">
-                    {event.name}
-                </Link>
-            </CardTitle>
-            <CardDescription className="flex items-center gap-2 pt-1">
-                <Calendar className="w-4 h-4" />
-                {format(parseISO(event.date), 'MMMM d, yyyy')}
-            </CardDescription>
-          </div>
-           <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreVertical className="h-4 w-4" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                    <CreateEventDialog eventToEdit={event}>
-                         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                            <Pencil className="mr-2 h-4 w-4" /> Edit
-                        </DropdownMenuItem>
-                    </CreateEventDialog>
-                    <DropdownMenuSeparator />
-                     <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive" onSelect={(e) => e.preventDefault()}>
-                                 <Trash2 className="mr-2 h-4 w-4" /> Delete
+    <div className="relative group p-[2px] rounded-lg bg-gradient-to-tr from-primary/50 to-accent/50 hover:from-primary hover:to-accent transition-all duration-300">
+        <Card className="h-full flex flex-col transition-all duration-300">
+        <CardHeader className="flex-row items-start justify-between">
+            <div>
+                <CardTitle className="font-headline text-2xl tracking-wide leading-tight group">
+                    <Link href={`/events/${event.id}`} className="hover:underline">
+                        {event.name}
+                    </Link>
+                </CardTitle>
+                <CardDescription className="flex items-center gap-2 pt-1">
+                    <Calendar className="w-4 h-4" />
+                    {format(parseISO(event.date), 'MMMM d, yyyy')}
+                </CardDescription>
+            </div>
+            <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreVertical className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <CreateEventDialog eventToEdit={event}>
+                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                <Pencil className="mr-2 h-4 w-4" /> Edit
                             </DropdownMenuItem>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    This action cannot be undone. This will permanently delete {event.name} and all its data.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                </DropdownMenuContent>
-            </DropdownMenu>
-      </CardHeader>
-       <Link href={`/events/${event.id}`} className="block group flex-grow">
-        <CardContent className="flex-grow space-y-4">
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <IndianRupee className="w-4 h-4 text-green-500" />
-                <span>Total Income</span>
-              </div>
-              <span className="font-mono font-medium text-base">₹{totalIncome.toLocaleString('en-IN')}</span>
+                        </CreateEventDialog>
+                        <DropdownMenuSeparator />
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive" onSelect={(e) => e.preventDefault()}>
+                                    <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This action cannot be undone. This will permanently delete {event.name} and all its data.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+        </CardHeader>
+        <Link href={`/events/${event.id}`} className="block group flex-grow">
+            <CardContent className="flex-grow space-y-4">
+            <div className="space-y-2 text-sm">
+                <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                    <IndianRupee className="w-4 h-4 text-green-500" />
+                    <span>Total Income</span>
+                </div>
+                <span className="font-mono font-medium text-base">₹{totalIncome.toLocaleString('en-IN')}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                    <IndianRupee className="w-4 h-4 text-red-500" />
+                    <span>Total Expenses</span>
+                </div>
+                <span className="font-mono font-medium text-base">₹{totalExpenses.toLocaleString('en-IN')}</span>
+                </div>
             </div>
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <IndianRupee className="w-4 h-4 text-red-500" />
-                <span>Total Expenses</span>
-              </div>
-              <span className="font-mono font-medium text-base">₹{totalExpenses.toLocaleString('en-IN')}</span>
+            
+            <Separator />
+            
+            <div className="space-y-2 text-sm font-semibold">
+                <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                    <Coins className={`w-4 h-4 ${cashBalance >= 0 ? 'text-blue-500' : 'text-orange-500'}`} />
+                    <span>Cash Balance</span>
+                    </div>
+                    <span className="font-mono text-base">₹{cashBalance.toLocaleString('en-IN')}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                    <Landmark className={`w-4 h-4 ${bankBalance >= 0 ? 'text-blue-500' : 'text-orange-500'}`} />
+                    <span>Bank Balance</span>
+                    </div>
+                    <span className="font-mono text-base">₹{bankBalance.toLocaleString('en-IN')}</span>
+                </div>
+                <div className="flex justify-between items-center pt-2 border-t border-dashed">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                    <Wallet className={`w-4 h-4 ${totalBalance >= 0 ? 'text-blue-500' : 'text-orange-500'}`} />
+                    <span>Total Balance</span>
+                    </div>
+                    <span className="font-mono text-base">₹{totalBalance.toLocaleString('en-IN')}</span>
+                </div>
             </div>
-          </div>
-          
-          <Separator />
-          
-           <div className="space-y-2 text-sm font-semibold">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Coins className={`w-4 h-4 ${cashBalance >= 0 ? 'text-blue-500' : 'text-orange-500'}`} />
-                  <span>Cash Balance</span>
-                </div>
-                <span className="font-mono text-base">₹{cashBalance.toLocaleString('en-IN')}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Landmark className={`w-4 h-4 ${bankBalance >= 0 ? 'text-blue-500' : 'text-orange-500'}`} />
-                  <span>Bank Balance</span>
-                </div>
-                <span className="font-mono text-base">₹{bankBalance.toLocaleString('en-IN')}</span>
-              </div>
-              <div className="flex justify-between items-center pt-2 border-t border-dashed">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Wallet className={`w-4 h-4 ${totalBalance >= 0 ? 'text-blue-500' : 'text-orange-500'}`} />
-                  <span>Total Balance</span>
-                </div>
-                <span className="font-mono text-base">₹{totalBalance.toLocaleString('en-IN')}</span>
-              </div>
-          </div>
-        </CardContent>
-       </Link>
-      <CardFooter className="flex-col items-stretch space-y-2 pt-4">
-         <Link href={`/events/${event.id}`} className="block group">
-            <Button variant="link" className="p-0 h-auto justify-start text-sm font-semibold text-primary-foreground/80 group-hover:text-accent-foreground">
-                View Details
-                <ArrowRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
-            </Button>
-         </Link>
-         <div className="flex gap-2 pt-2 border-t">
-            <AddExpenseDialog event={event}>
-                <Button variant="outline" size="sm" className="w-full">Add Expense</Button>
-            </AddExpenseDialog>
-            <AddIncomeDialog event={event}>
-                <Button variant="outline" size="sm" className="w-full">Add Income</Button>
-            </AddIncomeDialog>
-         </div>
-      </CardFooter>
-    </Card>
+            </CardContent>
+        </Link>
+        <CardFooter className="flex-col items-stretch space-y-2 pt-4">
+            <Link href={`/events/${event.id}`} className="block group">
+                <Button variant="link" className="p-0 h-auto justify-start text-sm font-semibold text-primary-foreground/80 group-hover:text-accent-foreground">
+                    View Details
+                    <ArrowRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
+                </Button>
+            </Link>
+            <div className="flex gap-2 pt-2 border-t">
+                <AddExpenseDialog event={event}>
+                    <Button variant="outline" size="sm" className="w-full">Add Expense</Button>
+                </AddExpenseDialog>
+                <AddIncomeDialog event={event}>
+                    <Button variant="outline" size="sm" className="w-full">Add Income</Button>
+                </AddIncomeDialog>
+            </div>
+        </CardFooter>
+        </Card>
+    </div>
   );
 }
