@@ -8,6 +8,7 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 export const metadata: Metadata = {
   title: 'Eventide Tracker',
   description: 'Track experiences and income for your events.',
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
