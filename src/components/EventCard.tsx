@@ -51,7 +51,7 @@ export function EventCard({ event }: EventCardProps) {
   };
 
   return (
-    <div className="relative group p-[2px] rounded-lg bg-gradient-to-tr from-primary/50 to-accent/50 hover:from-primary hover:to-accent transition-all duration-300">
+    <div className="relative group p-[2px] rounded-lg bg-gradient-to-tr from-primary/50 to-accent/50 transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-primary/20">
         <Card className="h-full flex flex-col transition-all duration-300">
         <CardHeader className="flex-row items-start justify-between">
             <div>
