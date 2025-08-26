@@ -51,8 +51,9 @@ export function EventCard({ event }: EventCardProps) {
   };
 
   return (
-    <div className="relative group p-[2px] rounded-lg bg-gradient-to-tr from-primary/50 to-accent/50 transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-primary/20">
-        <Card className="h-full flex flex-col transition-all duration-300">
+    <div className="relative group transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-primary/20 rounded-lg">
+       <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-accent rounded-lg blur opacity-0 group-hover:opacity-75 transition duration-1000 animate-pulse"></div>
+        <Card className="relative h-full flex flex-col transition-all duration-300 before:absolute before:inset-0 before:-z-10 before:bg-gradient-to-tr before:from-primary/80 before:to-accent/80 before:rounded-lg before:[mask:linear-gradient(white,white)_padding-box,linear-gradient(white,white)] before:[mask-composite:exclude] before:[mask-position:0_0,0_100%] before:[mask-size:100%_calc(100%-2px),calc(100%-2px)_100%] before:[mask-repeat:no-repeat]">
         <CardHeader className="flex-row items-start justify-between">
             <div>
                 <CardTitle className="font-headline text-2xl tracking-wide leading-tight group">
