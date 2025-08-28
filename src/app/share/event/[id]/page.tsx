@@ -3,8 +3,6 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import type { Event } from '@/lib/types';
 import { Sparkles, Calendar, NotebookText, BarChart2, Gift, IndianRupee } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
@@ -17,38 +15,29 @@ import Link from 'next/link';
 
 export default function SharedEventPage() {
   const params = useParams();
-  const eventId = typeof params.id === 'string' ? params.id : '';
+  const encodedData = typeof params.id === 'string' ? params.id : '';
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!eventId) {
+    if (!encodedData) {
       setLoading(false);
-      setError('Event ID is missing.');
+      setError('Event data is missing.');
       return;
     }
 
-    const fetchEvent = async () => {
-      try {
-        const eventRef = doc(db, 'events', eventId);
-        const eventSnap = await getDoc(eventRef);
-
-        if (eventSnap.exists()) {
-          setEvent({ id: eventSnap.id, ...eventSnap.data() } as Event);
-        } else {
-          setError('Event not found.');
-        }
-      } catch (err) {
-        console.error('Error fetching event:', err);
-        setError('Failed to load event data.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchEvent();
-  }, [eventId]);
+    try {
+      const decodedJson = decodeURIComponent(atob(encodedData));
+      const eventData = JSON.parse(decodedJson);
+      setEvent(eventData as Event);
+    } catch (err) {
+      console.error('Error decoding event data:', err);
+      setError('Failed to load event data. The link may be corrupted.');
+    } finally {
+      setLoading(false);
+    }
+  }, [encodedData]);
 
   if (loading) {
     return (
@@ -105,16 +94,16 @@ export default function SharedEventPage() {
         </div>
 
         <Tabs defaultValue={defaultTab} className="w-full">
-            <div className="overflow-x-auto pb-2 mb-4">
-                <TabsList className="inline-flex">
-                    {features.expenses && <TabsTrigger value="expenses"><NotebookText className="w-4 h-4 mr-2" /> Expenses</TabsTrigger>}
-                    {features.income && <TabsTrigger value="income"><IndianRupee className="w-4 h-4 mr-2" /> Income</TabsTrigger>}
-                    {features.donations && <TabsTrigger value="donations"><Gift className="w-4 h-4 mr-2" /> Donations</TabsTrigger>}
-                    <TabsTrigger value="reports">
-                        <BarChart2 className="w-4 h-4 mr-2" /> Reports
-                    </TabsTrigger>
-                </TabsList>
-            </div>
+          <div className="overflow-x-auto pb-2 mb-4">
+            <TabsList className="inline-flex">
+              {features.expenses && <TabsTrigger value="expenses"><NotebookText className="w-4 h-4 mr-2" /> Expenses</TabsTrigger>}
+              {features.income && <TabsTrigger value="income"><IndianRupee className="w-4 h-4 mr-2" /> Income</TabsTrigger>}
+              {features.donations && <TabsTrigger value="donations"><Gift className="w-4 h-4 mr-2" /> Donations</TabsTrigger>}
+              <TabsTrigger value="reports">
+                <BarChart2 className="w-4 h-4 mr-2" /> Reports
+              </TabsTrigger>
+            </TabsList>
+          </div>
             
             {features.expenses && <TabsContent value="expenses"><ExpenseTracker event={event} /></TabsContent>}
             {features.income && <TabsContent value="income"><IncomeTracker event={event} /></TabsContent>}
@@ -128,3 +117,5 @@ export default function SharedEventPage() {
     </div>
   );
 }
+
+    

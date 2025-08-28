@@ -35,12 +35,23 @@ export function ReportView({ event }: { event: Event }) {
   const { toast } = useToast();
   
   const handleShare = () => {
-    const shareUrl = `${window.location.origin}/share/event/${event.id}`;
-    navigator.clipboard.writeText(shareUrl);
-    toast({
-      title: "Link Copied!",
-      description: "The shareable link has been copied to your clipboard.",
-    });
+    try {
+      const eventJson = JSON.stringify(event);
+      const encodedData = btoa(encodeURIComponent(eventJson));
+      const shareUrl = `${window.location.origin}/share/event/${encodedData}`;
+      navigator.clipboard.writeText(shareUrl);
+      toast({
+        title: "Link Copied!",
+        description: "The shareable link has been copied to your clipboard.",
+      });
+    } catch (e) {
+      console.error("Failed to create share link", e);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not create a shareable link.",
+      });
+    }
   };
 
   const handleDownloadPdf = async () => {
@@ -442,3 +453,5 @@ export function ReportView({ event }: { event: Event }) {
     </div>
   );
 }
+
+    
