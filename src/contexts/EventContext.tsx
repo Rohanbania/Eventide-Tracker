@@ -48,47 +48,57 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
 
   useEffect(() => {
-    if (user) {
-      setLoading(true);
-      
-      const q = query(
-        collection(db, "events"), 
-        where("collaborators", "array-contains", user.email)
-      );
-
-      const unsub = onSnapshot(q, (querySnapshot) => {
-        const userEvents = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
-        setEvents(userEvents.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis()));
-        setLoading(false);
-      }, (error) => {
-        console.error("Error fetching events:", error);
-        toast({ variant: 'destructive', title: "Error", description: "Could not fetch your events."});
-        setLoading(false);
-      });
-      
-      const invitationsQuery = query(
-        collection(db, "events"),
-        where("pendingCollaborators", "array-contains", user.email)
-      );
-
-      const unsubInvitations = onSnapshot(invitationsQuery, (querySnapshot) => {
-          const invitations = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
-          setPendingInvitations(invitations);
-      }, (error) => {
-          console.error("Error fetching invitations:", error);
-          // Don't show toast for this, it's a background process
-      });
-
-
-      return () => {
-        unsub();
-        unsubInvitations();
-      };
-    } else {
+    if (!user || !user.email) {
       setEvents([]);
       setPendingInvitations([]);
       setLoading(false);
+      return;
     }
+
+    setLoading(true);
+
+    const ownedEventsQuery = query(collection(db, 'events'), where('userId', '==', user.uid));
+    const sharedEventsQuery = query(collection(db, 'events'), where('collaborators', 'array-contains', user.email));
+    const invitationsQuery = query(collection(db, 'events'), where('pendingCollaborators', 'array-contains', user.email));
+
+    const unsubOwned = onSnapshot(ownedEventsQuery, (snapshot) => {
+        const ownedEvents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
+        setEvents(currentEvents => {
+            const otherEvents = currentEvents.filter(e => e.userId !== user.uid);
+            return [...otherEvents, ...ownedEvents];
+        });
+        setLoading(false);
+    }, (error) => {
+        console.error('Error fetching owned events:', error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch your events.' });
+        setLoading(false);
+    });
+
+    const unsubShared = onSnapshot(sharedEventsQuery, (snapshot) => {
+        const sharedEvents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
+        setEvents(currentEvents => {
+            const otherEvents = currentEvents.filter(e => e.userId === user.uid || !e.collaborators.includes(user.email!));
+            return [...otherEvents, ...sharedEvents];
+        });
+        setLoading(false);
+    }, (error) => {
+        console.error('Error fetching shared events:', error);
+        setLoading(false);
+    });
+    
+    const unsubInvitations = onSnapshot(invitationsQuery, (querySnapshot) => {
+      const invitations = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
+      setPendingInvitations(invitations);
+    }, (error) => {
+      console.error("Error fetching invitations:", error);
+    });
+
+
+    return () => {
+      unsubOwned();
+      unsubShared();
+      unsubInvitations();
+    };
   }, [user, toast]);
 
   const getEventById = useCallback((id: string) => {
@@ -420,3 +430,5 @@ export const useEvents = () => {
   }
   return context;
 };
+
+    
