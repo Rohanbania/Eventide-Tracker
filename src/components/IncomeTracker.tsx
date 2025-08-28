@@ -30,8 +30,8 @@ export function IncomeTracker({ event }: { event: Event }) {
 
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-      <div className="md:col-span-1">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="lg:col-span-1">
         <Card>
           <CardHeader>
             <CardTitle className="font-headline">Record Income</CardTitle>
@@ -44,7 +44,7 @@ export function IncomeTracker({ event }: { event: Event }) {
           </CardContent>
         </Card>
       </div>
-      <div className="md:col-span-2">
+      <div className="lg:col-span-2">
         <h3 className="text-2xl font-headline mb-4 flex items-center gap-2">
             <IndianRupee className="w-6 h-6" /> Income Entries
         </h3>
@@ -55,8 +55,8 @@ export function IncomeTracker({ event }: { event: Event }) {
               <TableHeader>
                 <TableRow>
                   <TableHead>Source</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Date</TableHead>
+                  <TableHead className="hidden sm:table-cell">Type</TableHead>
+                  <TableHead className="hidden md:table-cell">Date</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                   <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
@@ -64,13 +64,23 @@ export function IncomeTracker({ event }: { event: Event }) {
               <TableBody>
                 {event.incomes.map((income) => (
                   <TableRow key={income.id} className="animate-in fade-in-0">
-                    <TableCell className="font-medium whitespace-nowrap">{income.source}</TableCell>
-                    <TableCell>
+                    <TableCell className="font-medium max-w-[150px] truncate">
+                        <div className="flex flex-col">
+                            <span>{income.source}</span>
+                            <div className="sm:hidden text-xs text-muted-foreground space-x-2 mt-1">
+                                <Badge variant={income.transactionType === 'Bank' ? 'secondary' : 'outline'}>
+                                    {income.transactionType}
+                                </Badge>
+                                <span>{format(new Date(income.createdAt), 'MMM d')}</span>
+                            </div>
+                        </div>
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">
                       <Badge variant={income.transactionType === 'Bank' ? 'secondary' : 'outline'}>
                         {income.transactionType}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground whitespace-nowrap">{format(new Date(income.createdAt), 'MMM d, yyyy')}</TableCell>
+                    <TableCell className="text-muted-foreground whitespace-nowrap hidden md:table-cell">{format(new Date(income.createdAt), 'MMM d, yyyy')}</TableCell>
                     <TableCell className="text-right font-mono whitespace-nowrap">₹{income.amount.toFixed(2)}</TableCell>
                      <TableCell className="text-right">
                       <DropdownMenu>
@@ -113,8 +123,9 @@ export function IncomeTracker({ event }: { event: Event }) {
                {event.incomes.length > 0 && (
                   <TableFooter>
                       <TableRow>
-                          <TableCell colSpan={4} className="font-bold text-lg">Total Income</TableCell>
-                          <TableCell className="text-right font-bold font-mono text-lg whitespace-nowrap">₹{totalIncome.toFixed(2)}</TableCell>
+                          <TableCell colSpan={3} className="font-bold text-base md:text-lg">Total Income</TableCell>
+                          <TableCell className="text-right font-bold font-mono text-base md:text-lg whitespace-nowrap">₹{totalIncome.toFixed(2)}</TableCell>
+                          <TableCell></TableCell>
                       </TableRow>
                   </TableFooter>
                )}
