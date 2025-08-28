@@ -28,7 +28,7 @@ export function DonationTracker({ event }: { event: Event }) {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
       <div className="lg:col-span-1">
         <Card>
           <CardHeader>
@@ -53,27 +53,19 @@ export function DonationTracker({ event }: { event: Event }) {
               <TableHeader>
                 <TableRow>
                   <TableHead>Donor</TableHead>
-                  <TableHead className="hidden sm:table-cell">Type</TableHead>
+                  <TableHead>Type</TableHead>
                   <TableHead>Details / Amount</TableHead>
-                  <TableHead className="hidden md:table-cell">Date</TableHead>
+                  <TableHead>Date</TableHead>
                   <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {donations.map((donation) => (
                   <TableRow key={donation.id} className="animate-in fade-in-0">
-                    <TableCell className="font-medium max-w-[200px] sm:max-w-[150px] truncate">
-                        <div className="flex flex-col">
-                            <span className="truncate">{donation.source || '-'}</span>
-                            <div className="sm:hidden text-xs text-muted-foreground space-x-2 mt-1">
-                                <Badge variant={donation.donationType === 'Goods' ? 'default' : donation.donationType === 'Bank' ? 'secondary' : 'outline'}>
-                                    {donation.donationType}
-                                </Badge>
-                                <span className="md:hidden">{format(new Date(donation.createdAt), 'MMM d')}</span>
-                            </div>
-                        </div>
+                    <TableCell className="font-medium max-w-[200px] truncate">
+                        {donation.source || '-'}
                     </TableCell>
-                    <TableCell className="hidden sm:table-cell">
+                    <TableCell>
                         <Badge variant={donation.donationType === 'Goods' ? 'default' : donation.donationType === 'Bank' ? 'secondary' : 'outline'}>
                             {donation.donationType}
                         </Badge>
@@ -84,7 +76,7 @@ export function DonationTracker({ event }: { event: Event }) {
                             : <span className="font-mono text-green-600">₹{donation.amount?.toFixed(2)}</span>
                         }
                     </TableCell>
-                    <TableCell className="text-muted-foreground whitespace-nowrap hidden md:table-cell">{format(new Date(donation.createdAt), 'MMM d, yyyy')}</TableCell>
+                    <TableCell className="text-muted-foreground whitespace-nowrap">{format(new Date(donation.createdAt), 'MMM d, yyyy')}</TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>

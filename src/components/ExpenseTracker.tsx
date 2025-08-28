@@ -29,7 +29,7 @@ export function ExpenseTracker({ event }: { event: Event }) {
   const totalExpenses = event.expenses.reduce((sum, expense) => sum + expense.amount, 0);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
       <div className="lg:col-span-1">
         <Card>
           <CardHeader>
@@ -54,8 +54,8 @@ export function ExpenseTracker({ event }: { event: Event }) {
               <TableHeader>
                 <TableRow>
                   <TableHead>Notes</TableHead>
-                  <TableHead className="hidden sm:table-cell">Type</TableHead>
-                  <TableHead className="hidden md:table-cell">Date</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Date</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                   <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
@@ -63,23 +63,15 @@ export function ExpenseTracker({ event }: { event: Event }) {
               <TableBody>
                 {event.expenses.map((expense) => (
                   <TableRow key={expense.id} className="animate-in fade-in-0">
-                    <TableCell className="font-medium max-w-[200px] sm:max-w-[150px] truncate">
-                      <div className="flex flex-col">
-                          <span className="truncate">{expense.notes || '-'}</span>
-                          <div className="sm:hidden text-xs text-muted-foreground space-x-2 mt-1">
-                            <Badge variant={expense.transactionType === 'Bank' ? 'secondary' : 'outline'}>
-                              {expense.transactionType}
-                            </Badge>
-                            <span className="md:hidden">{format(new Date(expense.createdAt), 'MMM d')}</span>
-                          </div>
-                      </div>
+                    <TableCell className="font-medium max-w-[200px] truncate">
+                        {expense.notes || '-'}
                     </TableCell>
-                     <TableCell className="hidden sm:table-cell">
+                     <TableCell>
                       <Badge variant={expense.transactionType === 'Bank' ? 'secondary' : 'outline'}>
                         {expense.transactionType}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground whitespace-nowrap hidden md:table-cell">{format(new Date(expense.createdAt), 'MMM d, yyyy')}</TableCell>
+                    <TableCell className="text-muted-foreground whitespace-nowrap">{format(new Date(expense.createdAt), 'MMM d, yyyy')}</TableCell>
                     <TableCell className="text-right font-mono text-destructive/80 whitespace-nowrap">₹{expense.amount.toFixed(2)}</TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
