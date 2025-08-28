@@ -126,22 +126,8 @@ export function ReportView({ event }: { event: Event }) {
             footStyles: { fillColor: [245, 245, 245], textColor: [40, 40, 40], fontStyle: 'bold'  }
         });
 
-        finalY = (doc as any).lastAutoTable.finalY + 10;
+        finalY = (doc as any).lastAutoTable.finalY + 15;
         
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Visual Breakdown', 14, finalY);
-        finalY += 5;
-
-        const chartWidth = 85;
-        const chartHeight = (chartWidth * incomeCanvas.height) / incomeCanvas.width;
-        
-        doc.addImage(incomeImgData, 'PNG', 14, finalY, chartWidth, chartHeight);
-        doc.addImage(expenseImgData, 'PNG', 110, finalY, chartWidth, chartHeight);
-
-        finalY += chartHeight + 15;
-
-
         const tableConfig = {
           theme: 'striped' as const,
           headStyles: { fillColor: [208, 191, 255], textColor: [40, 40, 40], fontStyle: 'bold' as const },
@@ -154,8 +140,10 @@ export function ReportView({ event }: { event: Event }) {
         };
         
         if (allIncomes.length > 0) {
-            doc.addPage();
-            finalY = 20;
+            if ((doc.internal.pageSize.height - finalY) < 50) { // Check if new page is needed
+                doc.addPage();
+                finalY = 20;
+            }
             doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
             doc.text('Income Breakdown', 14, finalY);
@@ -206,7 +194,26 @@ export function ReportView({ event }: { event: Event }) {
                     d.donationType === 'Goods' ? d.goods : formatCurrency(d.amount || 0)
                 ]),
             });
+            finalY = (doc as any).lastAutoTable.finalY + 15;
         }
+        
+        // Add Visuals at the end
+        if ((doc.internal.pageSize.height - finalY) < 120) { // Check if new page is needed
+            doc.addPage();
+            finalY = 20;
+        }
+
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Visual Breakdown', 14, finalY);
+        finalY += 5;
+
+        const chartWidth = 85;
+        const chartHeight = (chartWidth * incomeCanvas.height) / incomeCanvas.width;
+        
+        doc.addImage(incomeImgData, 'PNG', 14, finalY, chartWidth, chartHeight);
+        doc.addImage(expenseImgData, 'PNG', 110, finalY, chartWidth, chartHeight);
+
         
         const pdfDataUri = doc.output('datauristring');
         doc.save(`report-${event.name.toLowerCase().replace(/ /g, '-')}.pdf`);
@@ -406,3 +413,5 @@ export function ReportView({ event }: { event: Event }) {
     </div>
   );
 }
+
+    
