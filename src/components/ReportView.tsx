@@ -365,5 +365,3 @@ export function ReportView({ event }: { event: Event }) {
     </div>
   );
 }
-
-    
