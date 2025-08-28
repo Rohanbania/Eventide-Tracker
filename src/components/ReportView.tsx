@@ -99,28 +99,35 @@ export function ReportView({ event }: { event: Event }) {
             "M21 3L19.5 6.5L16 8L19.5 9.5L21 13L22.5 9.5L26 8L22.5 6.5L21 3Z"
         ];
         
+        const scale = 0.35;
+        const offsetX = 15;
+        const offsetY = 18;
+
         doc.saveGraphicsState();
         doc.setGState(new (doc as any).GState({opacity: 1}));
         doc.setLineWidth(0.5);
-        doc.translate(15, 18);
-        doc.scale(0.35); // Scale icon down
         
         iconPaths.forEach(pathData => {
             const commands = pathData.match(/[A-Z][^A-Z]*/g) || [];
-            let lastX = 0, lastY = 0;
             
-            commands.forEach(command => {
+            commands.forEach((command, index) => {
                 const type = command[0];
                 const points = command.substring(1).trim().split(/[ ,L]/).map(p => parseFloat(p));
 
-                if (type === 'M') { // moveto
-                    doc.moveTo(points[0], points[1]);
-                    [lastX, lastY] = [points[0], points[1]];
-                } else if (type === 'L') { // lineto
-                    doc.lineTo(points[0], points[1]);
-                     [lastX, lastY] = [points[0], points[1]];
-                } else if (type === 'Z') { // closepath
+                const transformedPoints = [];
+                for(let i=0; i<points.length; i+=2) {
+                    transformedPoints.push(points[i] * scale + offsetX);
+                    transformedPoints.push(points[i+1] * scale + offsetY);
+                }
+
+                if (type === 'M' && index === 0) {
+                    doc.moveTo(transformedPoints[0], transformedPoints[1]);
+                } else if (type === 'L') { 
+                    doc.lineTo(transformedPoints[0], transformedPoints[1]);
+                } else if (type === 'Z') {
                     doc.close();
+                } else {
+                     doc.moveTo(transformedPoints[0], transformedPoints[1]);
                 }
             });
              doc.fill();
@@ -451,5 +458,3 @@ export function ReportView({ event }: { event: Event }) {
     </div>
   );
 }
-
-    
