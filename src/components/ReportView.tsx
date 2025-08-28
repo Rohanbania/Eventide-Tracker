@@ -89,9 +89,47 @@ export function ReportView({ event }: { event: Event }) {
         let finalY = 0;
 
         // Header
+        const accentColor = "#73A9AD"; // Muted Teal from theme
+        doc.setFillColor(accentColor);
+        doc.setDrawColor(accentColor);
+        
+        // Draw Sparkles Icon
+        const iconPaths = [
+            "M10 3L8 8L3 10L8 12L10 17L12 12L17 10L12 8L10 3Z",
+            "M21 3L19.5 6.5L16 8L19.5 9.5L21 13L22.5 9.5L26 8L22.5 6.5L21 3Z"
+        ];
+        
+        doc.saveGraphicsState();
+        doc.setGState(new (doc as any).GState({opacity: 1}));
+        doc.setLineWidth(0.5);
+        doc.translate(15, 18);
+        doc.scale(0.35); // Scale icon down
+        
+        iconPaths.forEach(pathData => {
+            const commands = pathData.match(/[A-Z][^A-Z]*/g) || [];
+            let lastX = 0, lastY = 0;
+            
+            commands.forEach(command => {
+                const type = command[0];
+                const points = command.substring(1).trim().split(/[ ,L]/).map(p => parseFloat(p));
+
+                if (type === 'M') { // moveto
+                    doc.moveTo(points[0], points[1]);
+                    [lastX, lastY] = [points[0], points[1]];
+                } else if (type === 'L') { // lineto
+                    doc.lineTo(points[0], points[1]);
+                     [lastX, lastY] = [points[0], points[1]];
+                } else if (type === 'Z') { // closepath
+                    doc.close();
+                }
+            });
+             doc.fill();
+        });
+        doc.restoreGraphicsState();
+        
         doc.setFontSize(22);
-        doc.setTextColor(115, 169, 173);
-        doc.text("Eventide Tracker", 14, 22);
+        doc.setTextColor(accentColor);
+        doc.text("Eventide Tracker", 26, 22);
 
         // Report Title
         doc.setFontSize(16);
