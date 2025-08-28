@@ -30,6 +30,7 @@ import { useEffect, useState } from 'react';
 import { Textarea } from './ui/textarea';
 import type { Event } from '@/lib/types';
 import { Checkbox } from './ui/checkbox';
+import { ScrollArea } from './ui/scroll-area';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -121,85 +122,90 @@ export function CreateEventDialog({ eventToEdit, children }: CreateEventDialogPr
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle className="font-headline">{isEditMode ? 'Edit Event' : 'Create New Event'}</DialogTitle>
-          <DialogDescription>
-            {isEditMode ? 'Update the details for your event.' : "Add a new event to your tracker. Click save when you're done."}
-          </DialogDescription>
-        </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 py-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Event Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Summer Art Festival" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="date"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Event Date</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description (Optional)</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Describe your event..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormItem>
-                <div className="mb-4">
-                    <FormLabel className="text-base">Event Features</FormLabel>
-                    <FormDescription>
-                        Select the modules you want to enable for this event.
-                    </FormDescription>
-                </div>
-                {featureItems.map((item) => (
-                <FormField
-                    key={item.id}
-                    control={form.control}
-                    name={`features.${item.id}`}
-                    render={({ field }) => (
-                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 p-2 rounded-md hover:bg-muted">
-                        <FormControl>
-                        <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+                <DialogHeader>
+                    <DialogTitle className="font-headline">{isEditMode ? 'Edit Event' : 'Create New Event'}</DialogTitle>
+                    <DialogDescription>
+                        {isEditMode ? 'Update the details for your event.' : "Add a new event to your tracker. Click save when you're done."}
+                    </DialogDescription>
+                </DialogHeader>
+                
+                <ScrollArea className="h-[60vh] md:h-auto md:max-h-[60vh] pr-6">
+                    <div className="space-y-8 py-4">
+                        <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Event Name</FormLabel>
+                            <FormControl>
+                                <Input placeholder="e.g., Summer Art Festival" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
                         />
-                        </FormControl>
-                        <FormLabel className="font-normal">{item.label}</FormLabel>
-                    </FormItem>
-                    )}
-                />
-                ))}
-            </FormItem>
+                        <FormField
+                        control={form.control}
+                        name="date"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Event Date</FormLabel>
+                            <FormControl>
+                                <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField
+                        control={form.control}
+                        name="description"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Description (Optional)</FormLabel>
+                            <FormControl>
+                                <Textarea placeholder="Describe your event..." {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
 
-            <DialogFooter>
-              <Button type="submit">{isEditMode ? 'Save Changes' : 'Create Event'}</Button>
-            </DialogFooter>
-          </form>
+                        <FormItem>
+                            <div className="mb-4">
+                                <FormLabel className="text-base">Event Features</FormLabel>
+                                <FormDescription>
+                                    Select the modules you want to enable for this event.
+                                </FormDescription>
+                            </div>
+                            {featureItems.map((item) => (
+                            <FormField
+                                key={item.id}
+                                control={form.control}
+                                name={`features.${item.id}`}
+                                render={({ field }) => (
+                                <FormItem className="flex flex-row items-center space-x-3 space-y-0 p-2 rounded-md hover:bg-muted">
+                                    <FormControl>
+                                    <Checkbox
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                    />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">{item.label}</FormLabel>
+                                </FormItem>
+                                )}
+                            />
+                            ))}
+                        </FormItem>
+                    </div>
+                </ScrollArea>
+                
+                <DialogFooter className="pt-4">
+                <Button type="submit">{isEditMode ? 'Save Changes' : 'Create Event'}</Button>
+                </DialogFooter>
+            </form>
         </Form>
       </DialogContent>
     </Dialog>
