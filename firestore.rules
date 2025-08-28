@@ -1,43 +1,25 @@
 
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
     match /events/{eventId} {
-      
-      function isOwner() {
-        return request.auth.uid == resource.data.userId;
-      }
-      
-      function isCollaborator() {
-        return request.auth.token.email in resource.data.collaborators;
-      }
+      // Allow read access if the user is the owner or a collaborator.
+      allow read: if request.auth != null && 
+                     (resource.data.userId == request.auth.uid || 
+                      request.auth.token.email in resource.data.collaborators);
 
-      function isInvited() {
-        return request.auth.token.email in resource.data.pendingCollaborators;
-      }
-
-      function isAccepting() {
-        // Allow if user is adding themselves to collaborators
-        return request.resource.data.collaborators == resource.data.collaborators.concat([request.auth.token.email]);
-      }
-      
-      function isDeclining() {
-        // Allow if user is removing themselves from pending
-        return request.resource.data.pendingCollaborators == resource.data.pendingCollaborators.diff([request.auth.token.email]);
-      }
-
-      allow read: if request.auth != null && (isOwner() || isCollaborator() || isInvited());
-
+      // Allow create access to any authenticated user.
       allow create: if request.auth != null;
 
-      allow delete: if request.auth != null && isOwner();
+      // Allow update access if the user is the owner, a collaborator, or a pending collaborator.
+      allow update: if request.auth != null &&
+                     (resource.data.userId == request.auth.uid ||
+                      request.auth.token.email in resource.data.collaborators ||
+                      request.auth.token.email in resource.data.pendingCollaborators);
 
-      allow update: if request.auth != null && (
-        isOwner() || 
-        (isInvited() && (isAccepting() || isDeclining()))
-      );
+      // Allow delete access only to the owner of the event.
+      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
   }
 }
-
-    
