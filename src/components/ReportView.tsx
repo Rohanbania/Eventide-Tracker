@@ -221,14 +221,14 @@ export function ReportView({ event }: { event: Event }) {
             finalY = (doc as any).lastAutoTable.finalY + 15;
         }
         
-        const pdfDataUri = doc.output('datauristring');
         doc.save(`report-${event.name.toLowerCase().replace(/ /g, '-')}.pdf`);
+        const pdfDataUri = doc.output('datauristring');
         
         toast({
             title: "Download Complete",
             description: "Your PDF report has been downloaded.",
             action: (
-              <ToastAction altText="View PDF" onClick={() => window.open(pdfDataUri)}>View PDF</ToastAction>
+              <ToastAction altText="View PDF" onClick={() => window.open(pdfDataUri, '_blank')}>View PDF</ToastAction>
             ),
         });
       } catch (error) {
@@ -338,7 +338,7 @@ export function ReportView({ event }: { event: Event }) {
         <Card>
           <CardHeader>
             <CardTitle className="font-headline flex items-center gap-2 text-lg md:text-xl">
-              <Wallet className={`w-5 h-5 md:w-6 md:h-6 ${netProfit >= 0 ? 'text-emerald-500' : 'text-orange-500'}`} />
+              <Wallet className={`w-5 h-5 md-w-6 md:h-6 ${netProfit >= 0 ? 'text-emerald-500' : 'text-orange-500'}`} />
               Net Profit
             </CardTitle>
           </CardHeader>
