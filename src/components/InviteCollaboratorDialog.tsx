@@ -11,11 +11,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { Badge } from './ui/badge';
-import { X } from 'lucide-react';
 
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email address.'),
@@ -27,8 +26,9 @@ interface InviteCollaboratorDialogProps {
 
 export function InviteCollaboratorDialog({ event }: InviteCollaboratorDialogProps) {
   const [open, setOpen] = useState(false);
-  const { addCollaborator } = useEvents();
+  const { addCollaborator, removeCollaborator } = useEvents();
   const { user } = useAuth();
+  const isOwner = user?.uid === event.userId;
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -54,10 +54,16 @@ export function InviteCollaboratorDialog({ event }: InviteCollaboratorDialogProp
     setOpen(false);
   };
   
+  const handleRemoveCollaborator = (emailToRemove: string) => {
+    removeCollaborator(event.id, emailToRemove);
+  };
+  
   // Cannot invite collaborators if not the owner
-  if (user?.uid !== event.userId) {
+  if (!isOwner) {
     return null;
   }
+
+  const otherCollaborators = event.collaborators?.filter(c => c !== user?.email) || [];
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -76,11 +82,23 @@ export function InviteCollaboratorDialog({ event }: InviteCollaboratorDialogProp
         <div className="space-y-4 py-2">
             <div>
                 <h4 className="text-sm font-medium mb-2">Current Collaborators</h4>
-                <div className="flex flex-wrap gap-2">
-                    {event.collaborators?.map(email => (
-                        <Badge key={email} variant="secondary">{email}</Badge>
-                    ))}
-                </div>
+                 {otherCollaborators.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                        {otherCollaborators.map(email => (
+                            <Badge key={email} variant="secondary" className="flex items-center gap-1">
+                                {email}
+                                {isOwner && (
+                                    <button onClick={() => handleRemoveCollaborator(email)} className="ml-1 rounded-full hover:bg-destructive/20 p-0.5">
+                                        <X className="h-3 w-3" />
+                                        <span className="sr-only">Remove {email}</span>
+                                    </button>
+                                )}
+                            </Badge>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-xs text-muted-foreground">No other collaborators yet.</p>
+                )}
             </div>
             {event.pendingCollaborators && event.pendingCollaborators.length > 0 && (
                  <div>

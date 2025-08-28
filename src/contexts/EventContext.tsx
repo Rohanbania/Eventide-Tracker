@@ -34,6 +34,7 @@ interface EventContextType {
   updateDonation: (eventId: string, donation: Donation) => Promise<void>;
   deleteDonation: (eventId: string, donationId: string) => Promise<void>;
   addCollaborator: (eventId: string, email: string) => Promise<void>;
+  removeCollaborator: (eventId: string, email: string) => Promise<void>;
   acceptInvitation: (eventId: string, userEmail: string) => Promise<void>;
   declineInvitation: (eventId: string, userEmail: string) => Promise<void>;
 }
@@ -65,7 +66,9 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
         const ownedEvents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
         setEvents(currentEvents => {
             const otherEvents = currentEvents.filter(e => e.userId !== user.uid);
-            return [...otherEvents, ...ownedEvents];
+            const combined = [...otherEvents, ...ownedEvents];
+            // Deduplicate in case an owner is also in collaborators list somehow
+            return Array.from(new Map(combined.map(e => [e.id, e])).values());
         });
         setLoading(false);
     }, (error) => {
@@ -78,7 +81,9 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
         const sharedEvents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
         setEvents(currentEvents => {
             const otherEvents = currentEvents.filter(e => e.userId === user.uid || !e.collaborators.includes(user.email!));
-            return [...otherEvents, ...sharedEvents];
+            const combined = [...otherEvents, ...sharedEvents];
+             // Deduplicate in case an owner is also in collaborators list somehow
+            return Array.from(new Map(combined.map(e => [e.id, e])).values());
         });
         setLoading(false);
     }, (error) => {
@@ -173,6 +178,26 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     }
   };
   
+  const removeCollaborator = async (eventId: string, email: string) => {
+    try {
+      const eventRef = doc(db, "events", eventId);
+      await updateDoc(eventRef, {
+        collaborators: arrayRemove(email)
+      });
+      toast({
+        title: "Collaborator Removed",
+        description: `${email} has been removed from the event.`,
+      });
+    } catch (error) {
+      console.error("Error removing collaborator:", error);
+      toast({
+        variant: 'destructive',
+        title: "Error",
+        description: "Could not remove collaborator.",
+      });
+    }
+  };
+
   const acceptInvitation = async (eventId: string, userEmail: string) => {
     try {
       const eventRef = doc(db, "events", eventId);
@@ -416,6 +441,7 @@ const deleteDonation = async (eventId: string, donationId: string) => {
     updateDonation,
     deleteDonation,
     addCollaborator,
+    removeCollaborator,
     acceptInvitation,
     declineInvitation,
   };
@@ -430,5 +456,3 @@ export const useEvents = () => {
   }
   return context;
 };
-
-    
