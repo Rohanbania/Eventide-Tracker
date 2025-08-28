@@ -20,7 +20,7 @@ import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 
 const formSchema = z.object({
   source: z.string().min(2, 'Source must be at least 2 characters.'),
-  amount: z.coerce.number().positive('Amount must be a positive number.'),
+  amount: z.coerce.number({invalid_type_error: "Amount is required"}).positive('Amount must be a positive number.'),
   createdAt: z.date(),
   transactionType: z.enum(['Cash', 'Bank']),
 });
@@ -38,7 +38,7 @@ export function AddIncomeDialog({ event, incomeToEdit, children }: AddIncomeDial
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { source: '', amount: 0, createdAt: new Date(), transactionType: 'Cash' },
+    defaultValues: { source: '', amount: undefined, createdAt: new Date(), transactionType: 'Cash' },
   });
 
   useEffect(() => {
@@ -51,7 +51,7 @@ export function AddIncomeDialog({ event, incomeToEdit, children }: AddIncomeDial
               transactionType: incomeToEdit.transactionType,
           });
       } else {
-          form.reset({ source: '', amount: 0, createdAt: new Date(), transactionType: 'Cash' });
+          form.reset({ source: '', amount: undefined, createdAt: new Date(), transactionType: 'Cash' });
       }
     }
   }, [incomeToEdit, isEditMode, form, open]);
@@ -133,7 +133,7 @@ export function AddIncomeDialog({ event, incomeToEdit, children }: AddIncomeDial
                   <FormControl>
                     <div className="relative">
                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
-                       <Input type="number" step="0.01" placeholder="10000.00" className="pl-8" {...field} />
+                       <Input type="number" step="0.01" placeholder="10000.00" className="pl-8" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} value={field.value ?? ''} />
                     </div>
                   </FormControl>
                   <FormMessage />

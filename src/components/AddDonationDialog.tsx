@@ -22,7 +22,7 @@ import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 const formSchema = z.object({
   source: z.string().min(2, 'Donor name must be at least 2 characters.'),
   donationType: z.enum(['Cash', 'Bank', 'Goods']),
-  amount: z.coerce.number().optional(),
+  amount: z.coerce.number().positive().optional(),
   goods: z.string().optional(),
   createdAt: z.date(),
 }).refine(data => {
@@ -52,7 +52,7 @@ export function AddDonationDialog({ event, donationToEdit, children }: AddDonati
     defaultValues: { 
         source: '', 
         donationType: 'Cash', 
-        amount: 0,
+        amount: undefined,
         goods: '',
         createdAt: new Date() 
     },
@@ -74,7 +74,7 @@ export function AddDonationDialog({ event, donationToEdit, children }: AddDonati
             form.reset({ 
                 source: '', 
                 donationType: 'Cash', 
-                amount: 0,
+                amount: undefined,
                 goods: '',
                 createdAt: new Date() 
             });
@@ -175,7 +175,7 @@ export function AddDonationDialog({ event, donationToEdit, children }: AddDonati
                     <FormControl>
                         <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
-                        <Input type="number" step="0.01" placeholder="5000.00" className="pl-8" {...field} />
+                        <Input type="number" step="0.01" placeholder="5000.00" className="pl-8" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} value={field.value ?? ''} />
                         </div>
                     </FormControl>
                     <FormMessage />
