@@ -85,12 +85,12 @@ export function ReportView({ event }: { event: Event }) {
 
         finalY = 55;
 
-        const tableFooter = [
+        const summaryFooter = [
           ['Total', formatCurrency(totalIncome), formatCurrency(totalExpenses), formatCurrency(netProfit)],
         ];
 
         if (cashBalance !== 0 || bankBalance !== 0) {
-            tableFooter.push(
+            summaryFooter.push(
                  [{ content: `Cash Balance: ${formatCurrency(cashBalance)}`, colSpan: 2, styles: { fontStyle: 'normal', fillColor: [245, 245, 245] } }, { content: `Bank Balance: ${formatCurrency(bankBalance)}`, colSpan: 2, styles: { fontStyle: 'normal', fillColor: [245, 245, 245] } }],
             )
         }
@@ -103,7 +103,7 @@ export function ReportView({ event }: { event: Event }) {
                 ['Cash', formatCurrency(cashIncomes), formatCurrency(cashExpenses), formatCurrency(cashBalance)],
                 ['Bank', formatCurrency(bankIncomes), formatCurrency(bankExpenses), formatCurrency(bankBalance)],
             ],
-            foot: tableFooter,
+            foot: summaryFooter,
             theme: 'striped',
             headStyles: { fillColor: [208, 191, 255], textColor: [40, 40, 40], fontStyle: 'bold' },
             footStyles: { fillColor: [245, 245, 245], textColor: [40, 40, 40], fontStyle: 'bold'  }
