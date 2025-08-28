@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from 'react';
-import type { Event } from '@/lib/types';
+import type { Event, Income, Donation } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sparkles, BarChart2, FileText, IndianRupee, Wallet, Download, Landmark, Coins, Loader2 } from 'lucide-react';
@@ -49,8 +49,10 @@ export function ReportView({ event }: { event: Event }) {
         const doc = new jsPDF();
         
         // --- Document Content ---
-        const cashIncomes = event.incomes.filter(i => i.transactionType === 'Cash').reduce((acc, i) => acc + i.amount, 0);
-        const bankIncomes = event.incomes.filter(i => i.transactionType === 'Bank').reduce((acc, i) => acc + i.amount, 0);
+        const monetaryDonations = event.donations?.filter(d => d.donationType === 'Cash' || d.donationType === 'Bank') || [];
+        
+        const cashIncomes = event.incomes.filter(i => i.transactionType === 'Cash').reduce((acc, i) => acc + i.amount, 0) + monetaryDonations.filter(d => d.donationType === 'Cash').reduce((acc, d) => acc + (d.amount || 0), 0);
+        const bankIncomes = event.incomes.filter(i => i.transactionType === 'Bank').reduce((acc, i) => acc + i.amount, 0) + monetaryDonations.filter(d => d.donationType === 'Bank').reduce((acc, d) => acc + (d.amount || 0), 0);
         const totalIncome = cashIncomes + bankIncomes;
 
         const cashExpenses = event.expenses.filter(e => e.transactionType === 'Cash').reduce((acc, e) => acc + e.amount, 0);
@@ -60,6 +62,12 @@ export function ReportView({ event }: { event: Event }) {
         const cashBalance = cashIncomes - cashExpenses;
         const bankBalance = bankIncomes - bankExpenses;
         const netProfit = totalIncome - totalExpenses;
+
+        const allIncomes = [
+            ...event.incomes,
+            ...monetaryDonations.map(d => ({...d, source: `${d.source} (Donation)`}))
+        ].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
 
         let finalY = 0;
 
@@ -128,8 +136,8 @@ export function ReportView({ event }: { event: Event }) {
           }
         };
         
-        // Income Table
-        if (event.incomes.length > 0) {
+        // Income Table (including monetary donations)
+        if (allIncomes.length > 0) {
             doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
             doc.text('Income Breakdown', 14, finalY);
@@ -137,7 +145,7 @@ export function ReportView({ event }: { event: Event }) {
             ...tableConfig,
             startY: finalY + 2,
             head: [['Source', 'Date', 'Type', 'Amount']],
-            body: event.incomes.map(i => [i.source, format(new Date(i.createdAt), 'MMM d, yyyy'), i.transactionType, formatCurrency(i.amount)]),
+            body: allIncomes.map(i => [i.source, format(new Date(i.createdAt), 'MMM d, yyyy'), i.transactionType, formatCurrency(i.amount)]),
             foot: [['Total Income', '', '', formatCurrency(totalIncome)]],
             });
             finalY = (doc as any).lastAutoTable.finalY + 15;
@@ -155,6 +163,25 @@ export function ReportView({ event }: { event: Event }) {
             head: [['Notes', 'Created At', 'Type', 'Amount']],
             body: event.expenses.map(e => [e.notes || '-', format(new Date(e.createdAt), 'MMM d, yyyy'), e.transactionType, formatCurrency(e.amount)]),
             foot: [['Total Expenses', '', '', formatCurrency(totalExpenses)]],
+            });
+            finalY = (doc as any).lastAutoTable.finalY + 15;
+        }
+
+        // Donation Table
+        if (event.donations && event.donations.length > 0) {
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Donation Breakdown', 14, finalY);
+            autoTable(doc, {
+                ...tableConfig,
+                startY: finalY + 2,
+                head: [['Donor', 'Date', 'Type', 'Details/Amount']],
+                body: event.donations.map(d => [
+                    d.source,
+                    format(new Date(d.createdAt), 'MMM d, yyyy'),
+                    d.donationType,
+                    d.donationType === 'Goods' ? d.goods : formatCurrency(d.amount || 0)
+                ]),
             });
         }
         
@@ -180,13 +207,16 @@ export function ReportView({ event }: { event: Event }) {
       }
     }, 100); // A small delay to allow the UI to update
   };
-
-  const totalIncome = event.incomes.reduce((sum, income) => sum + income.amount, 0);
+  
+  const monetaryDonations = event.donations?.filter(d => d.donationType === 'Cash' || d.donationType === 'Bank') || [];
+  const totalDonationAmount = monetaryDonations.reduce((sum, d) => sum + (d.amount || 0), 0);
+  const totalIncome = event.incomes.reduce((sum, income) => sum + income.amount, 0) + totalDonationAmount;
   const totalExpenses = event.expenses.reduce((sum, expense) => sum + expense.amount, 0);
   const netProfit = totalIncome - totalExpenses;
   
-  const cashIncomes = event.incomes.filter(i => i.transactionType === 'Cash').reduce((acc, i) => acc + i.amount, 0);
-  const bankIncomes = event.incomes.filter(i => i.transactionType === 'Bank').reduce((acc, i) => acc + i.amount, 0);
+  const cashIncomes = event.incomes.filter(i => i.transactionType === 'Cash').reduce((acc, i) => acc + i.amount, 0) + monetaryDonations.filter(d => d.donationType === 'Cash').reduce((acc, d) => acc + (d.amount || 0), 0);
+  const bankIncomes = event.incomes.filter(i => i.transactionType === 'Bank').reduce((acc, i) => acc + i.amount, 0) + monetaryDonations.filter(d => d.donationType === 'Bank').reduce((acc, d) => acc + (d.amount || 0), 0);
+
   const cashExpenses = event.expenses.filter(e => e.transactionType === 'Cash').reduce((acc, e) => acc + e.amount, 0);
   const bankExpenses = event.expenses.filter(e => e.transactionType === 'Bank').reduce((acc, e) => acc + e.amount, 0);
   const cashBalance = cashIncomes - cashExpenses;
