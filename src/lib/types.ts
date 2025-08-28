@@ -3,12 +3,19 @@ import { Timestamp } from "firebase/firestore";
 export type TransactionType = 'Cash' | 'Bank';
 export type DonationType = 'Cash' | 'Bank' | 'Goods';
 
+export interface Author {
+    uid: string;
+    name: string;
+    photoURL: string;
+}
+
 export interface Income {
   id: string;
   source: string;
   amount: number;
   createdAt: string;
   transactionType: TransactionType;
+  author?: Author;
 }
 
 export interface Expense {
@@ -17,6 +24,7 @@ export interface Expense {
   amount: number;
   createdAt: string;
   transactionType: TransactionType;
+  author?: Author;
 }
 
 export interface Donation {
@@ -26,6 +34,7 @@ export interface Donation {
   donationType: DonationType;
   amount?: number; // For Cash/Bank
   goods?: string; // For Goods
+  author?: Author;
 }
 
 export interface EventFeatures {
@@ -38,6 +47,7 @@ export interface EventFeatures {
 export interface Event {
   id: string;
   userId: string;
+  ownerName: string;
   name: string;
   date: string;
   description?: string;
@@ -45,5 +55,6 @@ export interface Event {
   expenses: Expense[];
   incomes: Income[];
   donations: Donation[];
+  collaborators?: string[];
   createdAt: Timestamp;
 }

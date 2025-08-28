@@ -2,8 +2,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
-import { collection, addDoc, query, where, onSnapshot, doc, updateDoc, orderBy, deleteDoc } from 'firebase/firestore';
-import type { Event, Expense, Income, TransactionType, Donation, EventFeatures } from '@/lib/types';
+import { collection, addDoc, query, where, onSnapshot, doc, updateDoc, orderBy, deleteDoc, arrayUnion } from 'firebase/firestore';
+import type { Event, Expense, Income, TransactionType, Donation, EventFeatures, Author } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './AuthContext';
 import { db } from '@/lib/firebase';
@@ -32,6 +32,7 @@ interface EventContextType {
   addDonation: (eventId: string, donation: Omit<Donation, 'id'>) => Promise<void>;
   updateDonation: (eventId: string, donation: Donation) => Promise<void>;
   deleteDonation: (eventId: string, donationId: string) => Promise<void>;
+  addCollaborator: (eventId: string, email: string) => Promise<void>;
 }
 
 const EventContext = createContext<EventContextType | undefined>(undefined);
@@ -45,27 +46,41 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (user) {
       setLoading(true);
-      const q = query(collection(db, "events"), where("userId", "==", user.uid), orderBy("createdAt", "desc"));
-      const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        const userEvents: Event[] = [];
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          userEvents.push({ 
-              id: doc.id, 
-              ...data,
-              donations: data.donations || [], // Ensure donations array exists
-              features: data.features || { expenses: true, income: true, donations: true }, // Ensure features exists
-          } as Event);
+      
+      const ownedQuery = query(collection(db, "events"), where("userId", "==", user.uid));
+      const sharedQuery = query(collection(db, "events"), where("collaborators", "array-contains", user.email));
+
+      const unsubOwned = onSnapshot(ownedQuery, (querySnapshot) => {
+        const ownedEvents = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
+        setEvents(prevEvents => {
+          const otherEvents = prevEvents.filter(e => e.userId !== user.uid);
+          return [...otherEvents, ...ownedEvents].sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
         });
-        setEvents(userEvents);
         setLoading(false);
       }, (error) => {
-        console.error("Error fetching events:", error);
-        toast({ variant: 'destructive', title: "Error", description: "Could not fetch events."});
+        console.error("Error fetching owned events:", error);
+        toast({ variant: 'destructive', title: "Error", description: "Could not fetch your events."});
         setLoading(false);
       });
 
-      return () => unsubscribe();
+      const unsubShared = onSnapshot(sharedQuery, (querySnapshot) => {
+          const sharedEvents = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
+          setEvents(prevEvents => {
+            const otherEvents = prevEvents.filter(e => !e.collaborators?.includes(user.email || ''));
+            return [...otherEvents, ...sharedEvents].sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+        });
+        setLoading(false);
+      }, (error) => {
+        console.error("Error fetching shared events:", error);
+        toast({ variant: 'destructive', title: "Error", description: "Could not fetch shared events."});
+        setLoading(false);
+      });
+
+
+      return () => {
+        unsubOwned();
+        unsubShared();
+      };
     } else {
       setEvents([]);
       setLoading(false);
@@ -81,10 +96,12 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     try {
       await addDoc(collection(db, "events"), {
         userId: user.uid,
+        ownerName: user.displayName,
         ...data,
         expenses: [],
         incomes: [],
         donations: [],
+        collaborators: [user.email],
         createdAt: Timestamp.now(),
       });
       toast({
@@ -121,9 +138,32 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const addCollaborator = async (eventId: string, email: string) => {
+    try {
+        const eventRef = doc(db, "events", eventId);
+        await updateDoc(eventRef, {
+            collaborators: arrayUnion(email)
+        });
+        toast({
+            title: "Collaborator Added",
+            description: `${email} can now edit this event.`,
+        });
+    } catch (error) {
+        console.error("Error adding collaborator:", error);
+        toast({
+            variant: 'destructive',
+            title: "Error",
+            description: "Could not add collaborator.",
+        });
+    }
+  };
+
+
   const addExpense = async (eventId: string, notes: string, amount: number, createdAt: string, transactionType: TransactionType) => {
     const event = getEventById(eventId);
-    if (!event) return;
+    if (!event || !user) return;
+
+    const author: Author = { uid: user.uid, name: user.displayName || 'Unknown', photoURL: user.photoURL || '' };
 
     const newExpense: Expense = {
       id: doc(collection(db, "dummy")).id, // Generate a unique ID
@@ -131,6 +171,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       amount,
       createdAt,
       transactionType,
+      author,
     };
     
     try {
@@ -182,7 +223,9 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
 
   const addIncome = async (eventId: string, source: string, amount: number, createdAt: string, transactionType: TransactionType) => {
     const event = getEventById(eventId);
-    if (!event) return;
+    if (!event || !user) return;
+    
+    const author: Author = { uid: user.uid, name: user.displayName || 'Unknown', photoURL: user.photoURL || '' };
     
     const newIncome: Income = {
       id: doc(collection(db, "dummy")).id, // Generate a unique ID
@@ -190,6 +233,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       amount,
       createdAt,
       transactionType,
+      author,
     };
 
     try {
@@ -240,11 +284,14 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
 
   const addDonation = async (eventId: string, donationData: Omit<Donation, 'id'>) => {
     const event = getEventById(eventId);
-    if (!event) return;
+    if (!event || !user) return;
+
+    const author: Author = { uid: user.uid, name: user.displayName || 'Unknown', photoURL: user.photoURL || '' };
 
     const newDonation: Donation = {
         id: doc(collection(db, "dummy")).id,
         ...donationData,
+        author,
     };
 
     try {
@@ -311,6 +358,7 @@ const deleteDonation = async (eventId: string, donationId: string) => {
     addDonation,
     updateDonation,
     deleteDonation,
+    addCollaborator
   };
 
   return <EventContext.Provider value={value}>{children}</EventContext.Provider>;

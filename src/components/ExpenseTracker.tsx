@@ -13,6 +13,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 import { toast } from '@/hooks/use-toast';
 import { AddExpenseDialog } from './AddExpenseDialog';
+import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
+import { Tooltip, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import { TooltipContent } from '@radix-ui/react-tooltip';
 
 export function ExpenseTracker({ event, isReadOnly = false }: { event: Event, isReadOnly?: boolean }) {
   const { deleteExpense } = useEvents();
@@ -56,6 +59,7 @@ export function ExpenseTracker({ event, isReadOnly = false }: { event: Event, is
               <TableHeader>
                 <TableRow>
                   <TableHead>Notes</TableHead>
+                  <TableHead>Author</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
@@ -67,6 +71,21 @@ export function ExpenseTracker({ event, isReadOnly = false }: { event: Event, is
                   <TableRow key={expense.id} className="animate-in fade-in-0">
                     <TableCell className="font-medium max-w-[200px] truncate">
                         {expense.notes || '-'}
+                    </TableCell>
+                    <TableCell>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger>
+                                    <Avatar className="h-7 w-7">
+                                        <AvatarImage src={expense.author?.photoURL} alt={expense.author?.name} />
+                                        <AvatarFallback>{expense.author?.name?.charAt(0) || 'U'}</AvatarFallback>
+                                    </Avatar>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>{expense.author?.name || 'Unknown User'}</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
                     </TableCell>
                      <TableCell>
                       <Badge variant={expense.transactionType === 'Bank' ? 'secondary' : 'outline'}>
@@ -118,7 +137,7 @@ export function ExpenseTracker({ event, isReadOnly = false }: { event: Event, is
               {event.expenses.length > 0 && (
                   <TableFooter>
                       <TableRow>
-                          <TableCell colSpan={isReadOnly ? 3 : 4} className="font-bold text-base md:text-lg">Total Expenses</TableCell>
+                          <TableCell colSpan={isReadOnly ? 4 : 5} className="font-bold text-base md:text-lg">Total Expenses</TableCell>
                           <TableCell className="text-right font-bold font-mono text-base md:text-lg text-destructive/80 whitespace-nowrap">₹{totalExpenses.toFixed(2)}</TableCell>
                           {!isReadOnly && <TableCell></TableCell>}
                       </TableRow>
