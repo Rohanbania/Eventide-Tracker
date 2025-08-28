@@ -1,20 +1,22 @@
-
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Rules for the 'events' collection
     match /events/{eventId} {
-      // Allow public read access to single documents for sharing.
+      // Allow anyone to read a single event document.
+      // This is required for the public sharing feature to work.
       allow get: if true;
 
-      // Allow authenticated users to list events for their dashboard.
-      // And ensure they can only list their own events if a query is made on userId.
+      // Allow only authenticated users to list multiple events (e.g., on the dashboard).
       allow list: if request.auth != null;
 
-      // Allow authenticated users to create events, ensuring they set themselves as the owner.
+      // Allow only authenticated users to create new events.
+      // The new event's userId must match the creator's user ID.
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
 
-      // Allow users to update or delete only their own events.
-      allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+      // Allow only the user who created the event to update or delete it.
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
   }
 }
