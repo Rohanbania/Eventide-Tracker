@@ -13,7 +13,6 @@ import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { ToastAction } from '@/components/ui/toast';
-import html2canvas from 'html2canvas';
 
 const formatCurrency = (amount: number) => {
     return `Rs ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -38,27 +37,7 @@ export function ReportView({ event }: { event: Event }) {
   const handleDownloadPdf = async () => {
     setIsDownloading(true);
     
-    // Get the chart elements by their IDs
-    const incomeChartEl = document.getElementById('income-chart');
-    const expenseChartEl = document.getElementById('expense-chart');
-
-    if (!incomeChartEl || !expenseChartEl) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Chart elements not found for PDF generation."
-        });
-        setIsDownloading(false);
-        return;
-    }
-
     try {
-        const incomeCanvas = await html2canvas(incomeChartEl, { backgroundColor: null });
-        const expenseCanvas = await html2canvas(expenseChartEl, { backgroundColor: null });
-        
-        const incomeImgData = incomeCanvas.toDataURL('image/png');
-        const expenseImgData = expenseCanvas.toDataURL('image/png');
-
         const doc = new jsPDF();
         
         const monetaryDonations = event.donations?.filter(d => d.donationType === 'Cash' || d.donationType === 'Bank') || [];
@@ -241,24 +220,6 @@ export function ReportView({ event }: { event: Event }) {
             });
             finalY = (doc as any).lastAutoTable.finalY + 15;
         }
-        
-        // Add Visuals at the end
-        if ((doc.internal.pageSize.height - finalY) < 120) { // Check if new page is needed
-            doc.addPage();
-            finalY = 20;
-        }
-
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Visual Breakdown', 14, finalY);
-        finalY += 5;
-
-        const chartWidth = 85;
-        const chartHeight = (chartWidth * incomeCanvas.height) / incomeCanvas.width;
-        
-        doc.addImage(incomeImgData, 'PNG', 14, finalY, chartWidth, chartHeight);
-        doc.addImage(expenseImgData, 'PNG', 110, finalY, chartWidth, chartHeight);
-
         
         const pdfDataUri = doc.output('datauristring');
         doc.save(`report-${event.name.toLowerCase().replace(/ /g, '-')}.pdf`);
@@ -464,4 +425,3 @@ export function ReportView({ event }: { event: Event }) {
     </div>
   );
 }
-
