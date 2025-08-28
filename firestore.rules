@@ -2,16 +2,17 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /events/{eventId} {
-      // Allow anyone to read a single event. This is for the public share page.
+      // Allow anyone to read a single event document for sharing purposes.
       allow get: if true;
 
-      // Allow authenticated users to list events. The query must include `where("userId", "==", request.auth.uid)`.
+      // Allow only authenticated users to list events.
+      // This rule is not used by the app currently but is good practice.
       allow list: if request.auth != null;
 
-      // Allow authenticated users to create an event, ensuring the userId matches.
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      // Allow only authenticated users to create events.
+      allow create: if request.auth.uid == request.resource.data.userId;
 
-      // Allow the user who owns the event to update or delete it.
+      // Allow only the user who owns the event to update or delete it.
       allow update, delete: if request.auth.uid == resource.data.userId;
     }
   }
