@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart2, FileText, IndianRupee, Wallet, Download, Landmark, Coins, Loader2 } from 'lucide-react';
 import { ChartContainer, ChartConfig, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Legend } from "recharts"
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
@@ -19,9 +19,13 @@ const formatCurrency = (amount: number) => {
 };
 
 const chartConfig = {
-  amount: {
+  income: {
     label: "Income",
     color: "hsl(var(--chart-1))",
+  },
+  expense: {
+    label: "Expense",
+    color: "hsl(var(--chart-2))",
   },
 } satisfies ChartConfig
 
@@ -204,9 +208,25 @@ export function ReportView({ event }: { event: Event }) {
   const bankBalance = bankIncomes - bankExpenses;
   const netProfit = totalIncome - totalExpenses;
 
-  const chartData = event.incomes.map(income => ({
-    source: income.source,
-    amount: income.amount,
+  const allIncomes = [
+      ...event.incomes,
+      ...monetaryDonations.map(d => ({
+        id: d.id,
+        source: `${d.source} (Donation)`,
+        amount: d.amount || 0,
+        createdAt: d.createdAt,
+        transactionType: d.donationType as 'Cash' | 'Bank',
+      }))
+  ];
+  
+  const incomeChartData = allIncomes.map(item => ({
+    name: item.source,
+    income: item.amount,
+  }));
+
+  const expenseChartData = event.expenses.map(item => ({
+    name: item.notes || 'Unspecified',
+    expense: item.amount,
   }));
 
   return (
@@ -281,38 +301,72 @@ export function ReportView({ event }: { event: Event }) {
         </Card>
       </div>
       
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-headline flex items-center gap-2">
-            <BarChart2 className="w-6 h-6 text-accent" />
-            Income Breakdown
-          </CardTitle>
-          <CardDescription>A visual breakdown of income by source.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {chartData.length > 0 ? (
-             <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
-                <ResponsiveContainer>
-                    <BarChart accessibilityLayer data={chartData} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
-                        <CartesianGrid vertical={false} />
-                        <XAxis
-                        dataKey="source"
-                        tickLine={false}
-                        tickMargin={10}
-                        axisLine={false}
-                        tickFormatter={(value) => value.slice(0, 10) + (value.length > 10 ? '...' : '')}
-                        />
-                        <YAxis tickFormatter={(value) => `₹${value / 1000}k`} />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="amount" fill="var(--color-amount)" radius={4} />
-                    </BarChart>
-                </ResponsiveContainer>
-            </ChartContainer>
-          ) : (
-            <p className="text-muted-foreground text-center py-8">No income data to display.</p>
-          )}
-        </CardContent>
-      </Card>
+      <div className="grid md:grid-cols-2 gap-8">
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-headline flex items-center gap-2">
+              <BarChart2 className="w-6 h-6 text-accent" />
+              Income Breakdown
+            </CardTitle>
+            <CardDescription>A visual breakdown of all income sources.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {incomeChartData.length > 0 ? (
+              <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+                  <ResponsiveContainer>
+                      <BarChart accessibilityLayer data={incomeChartData} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
+                          <CartesianGrid vertical={false} />
+                          <XAxis
+                          dataKey="name"
+                          tickLine={false}
+                          tickMargin={10}
+                          axisLine={false}
+                          tickFormatter={(value) => value.slice(0, 10) + (value.length > 10 ? '...' : '')}
+                          />
+                          <YAxis tickFormatter={(value) => `₹${value / 1000}k`} />
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          <Bar dataKey="income" fill="var(--color-income)" radius={4} />
+                      </BarChart>
+                  </ResponsiveContainer>
+              </ChartContainer>
+            ) : (
+              <p className="text-muted-foreground text-center py-8">No income data to display.</p>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-headline flex items-center gap-2">
+              <BarChart2 className="w-6 h-6 text-accent" />
+              Expense Breakdown
+            </CardTitle>
+            <CardDescription>A visual breakdown of all expenses.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {expenseChartData.length > 0 ? (
+              <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+                  <ResponsiveContainer>
+                      <BarChart accessibilityLayer data={expenseChartData} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
+                          <CartesianGrid vertical={false} />
+                          <XAxis
+                          dataKey="name"
+                          tickLine={false}
+                          tickMargin={10}
+                          axisLine={false}
+                          tickFormatter={(value) => value.slice(0, 10) + (value.length > 10 ? '...' : '')}
+                          />
+                          <YAxis tickFormatter={(value) => `₹${value / 1000}k`} />
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          <Bar dataKey="expense" fill="var(--color-expense)" radius={4} />
+                      </BarChart>
+                  </ResponsiveContainer>
+              </ChartContainer>
+            ) : (
+              <p className="text-muted-foreground text-center py-8">No expense data to display.</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
