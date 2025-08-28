@@ -58,18 +58,22 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
 
     setLoading(true);
 
+    let ownedEvents: Event[] = [];
+    let sharedEvents: Event[] = [];
+
+    const updateCombinedEvents = () => {
+        const allEvents = [...ownedEvents, ...sharedEvents];
+        const uniqueEvents = Array.from(new Map(allEvents.map(event => [event.id, event])).values());
+        setEvents(uniqueEvents);
+    };
+    
     const ownedEventsQuery = query(collection(db, 'events'), where('userId', '==', user.uid));
     const sharedEventsQuery = query(collection(db, 'events'), where('collaborators', 'array-contains', user.email));
     const invitationsQuery = query(collection(db, 'events'), where('pendingCollaborators', 'array-contains', user.email));
 
     const unsubOwned = onSnapshot(ownedEventsQuery, (snapshot) => {
-        const ownedEvents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
-        setEvents(currentEvents => {
-            const otherEvents = currentEvents.filter(e => e.userId !== user.uid);
-            const combined = [...otherEvents, ...ownedEvents];
-            // Deduplicate in case an owner is also in collaborators list somehow
-            return Array.from(new Map(combined.map(e => [e.id, e])).values());
-        });
+        ownedEvents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
+        updateCombinedEvents();
         setLoading(false);
     }, (error) => {
         console.error('Error fetching owned events:', error);
@@ -78,13 +82,8 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     });
 
     const unsubShared = onSnapshot(sharedEventsQuery, (snapshot) => {
-        const sharedEvents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
-        setEvents(currentEvents => {
-            const otherEvents = currentEvents.filter(e => e.userId === user.uid || !e.collaborators.includes(user.email!));
-            const combined = [...otherEvents, ...sharedEvents];
-             // Deduplicate in case an owner is also in collaborators list somehow
-            return Array.from(new Map(combined.map(e => [e.id, e])).values());
-        });
+        sharedEvents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
+        updateCombinedEvents();
         setLoading(false);
     }, (error) => {
         console.error('Error fetching shared events:', error);
