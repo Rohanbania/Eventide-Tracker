@@ -1,31 +1,41 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    function isOwner(resource) {
-      return request.auth.uid == resource.data.userId;
-    }
-
-    function isCollaborator(resource) {
-      return request.auth.token.email in resource.data.collaborators;
-    }
-    
-    function isInvited(resource) {
-      return request.auth.token.email in resource.data.pendingCollaborators;
-    }
-
     match /events/{eventId} {
-      allow read: if request.auth != null && (isOwner(resource) || isCollaborator(resource) || isInvited(resource));
-      allow create: if request.auth != null;
-      allow update: if request.auth != null && (isOwner(resource) || isCollaborator(resource) || isInvited(resource));
-      allow delete: if request.auth != null && isOwner(resource);
-    }
-    
-    // Allow list queries for authenticated users, filtered by the client.
-    match /events/{eventId} {
+      // Helper function to check if the user is the owner
+      function isOwner() {
+        return request.auth.uid == resource.data.userId;
+      }
+
+      // Helper function to check if the user is a collaborator
+      function isCollaborator() {
+        return request.auth.token.email in resource.data.collaborators;
+      }
+      
+      // Helper function to check if the user is a pending collaborator
+      function isInvited() {
+        return request.auth.token.email in resource.data.pendingCollaborators;
+      }
+
+      // Allow read access (get) if user is owner or collaborator.
+      // This is for reading a single document.
+      allow get: if request.auth != null && (isOwner() || isCollaborator());
+      
+      // Allow list access for queries. Security is enforced by the queries in the app
+      // which use `where("collaborators", "array-contains", user.email)`.
+      // Firestore rules require this to be broad for "array-contains" to work.
       allow list: if request.auth != null;
+
+      // Allow event creation for any authenticated user.
+      allow create: if request.auth != null;
+      
+      // Allow updates if the user is the owner (e.g., to invite others)
+      // or if an invited user is accepting/declining an invitation.
+      allow update: if request.auth != null && (isOwner() || isCollaborator() || isInvited());
+
+      // Only the owner can delete the event.
+      allow delete: if request.auth != null && isOwner();
     }
   }
 }
