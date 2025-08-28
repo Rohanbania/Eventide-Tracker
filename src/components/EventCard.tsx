@@ -14,6 +14,7 @@ import { useEvents } from '@/contexts/EventContext';
 import { toast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { AddDonationDialog } from './AddDonationDialog';
+import { cn } from '@/lib/utils';
 
 interface EventCardProps {
   event: Event;
@@ -35,6 +36,7 @@ export function EventCard({ event }: EventCardProps) {
   const totalBalance = totalIncome - totalExpenses;
 
   const features = event.features || { expenses: true, income: true, donations: true };
+  const enabledFeaturesCount = Object.values(features).filter(Boolean).length;
 
 
   const handleDelete = async () => {
@@ -157,7 +159,10 @@ export function EventCard({ event }: EventCardProps) {
                     <ArrowRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
                 </Button>
             </Link>
-            <div className="grid grid-cols-3 gap-2 pt-2 border-t">
+            <div className={cn(
+                "grid gap-2 pt-2 border-t",
+                `grid-cols-${enabledFeaturesCount}`
+            )}>
                 {features.expenses && <AddExpenseDialog event={event}><Button variant="outline" size="sm" className="w-full">Expense</Button></AddExpenseDialog>}
                 {features.income && <AddIncomeDialog event={event}><Button variant="outline" size="sm" className="w-full">Income</Button></AddIncomeDialog>}
                 {features.donations && <AddDonationDialog event={event}><Button variant="outline" size="sm" className="w-full"><Gift className="mr-1 h-4 w-4" />Donation</Button></AddDonationDialog>}
