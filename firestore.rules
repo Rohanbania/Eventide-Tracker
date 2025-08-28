@@ -1,20 +1,16 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
     match /events/{eventId} {
-      // Allow anyone to read an event (for sharing)
+      // Allow anyone to read a single event document for sharing purposes.
       allow get: if true;
-      
-      // Allow the user who created the event to do anything
-      allow list, create, update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
-    }
 
-    // Default deny all other collections
-    match /{document=**} {
-      allow read, write: if false;
+      // Allow list/read access only for the user who owns the events.
+      allow list: if request.auth != null && request.auth.uid == resource.data.userId;
+      
+      // Allow create, update, delete only for the user who owns the event.
+      allow write: if request.auth != null && request.auth.uid == request.resource.data.userId;
     }
   }
 }
