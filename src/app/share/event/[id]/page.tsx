@@ -105,9 +105,9 @@ export default function SharedEventPage() {
             </TabsList>
           </div>
             
-            {features.expenses && <TabsContent value="expenses"><ExpenseTracker event={event} /></TabsContent>}
-            {features.income && <TabsContent value="income"><IncomeTracker event={event} /></TabsContent>}
-            {features.donations && <TabsContent value="donations"><DonationTracker event={event} /></TabsContent>}
+            {features.expenses && <TabsContent value="expenses"><ExpenseTracker event={event} isReadOnly={true} /></TabsContent>}
+            {features.income && <TabsContent value="income"><IncomeTracker event={event} isReadOnly={true} /></TabsContent>}
+            {features.donations && <TabsContent value="donations"><DonationTracker event={event} isReadOnly={true} /></TabsContent>}
 
             <TabsContent value="reports">
                 <ReportView event={event} />

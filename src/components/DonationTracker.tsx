@@ -14,7 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from '@/hooks/use-toast';
 import { AddDonationDialog } from './AddDonationDialog';
 
-export function DonationTracker({ event }: { event: Event }) {
+export function DonationTracker({ event, isReadOnly = false }: { event: Event, isReadOnly?: boolean }) {
   const { deleteDonation } = useEvents();
   const donations = event.donations || [];
 
@@ -29,20 +29,22 @@ export function DonationTracker({ event }: { event: Event }) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-      <div className="lg:col-span-1">
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-headline flex items-center gap-2"><Gift /> Record Donation</CardTitle>
-            <CardDescription>Add a new donation for this event.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <AddDonationDialog event={event}>
-                <Button variant="outline" className="w-full"><PlusCircle/> Add New Donation</Button>
-            </AddDonationDialog>
-          </CardContent>
-        </Card>
-      </div>
-      <div className="lg:col-span-2">
+      {!isReadOnly && (
+        <div className="lg:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-headline flex items-center gap-2"><Gift /> Record Donation</CardTitle>
+              <CardDescription>Add a new donation for this event.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AddDonationDialog event={event}>
+                  <Button variant="outline" className="w-full"><PlusCircle/> Add New Donation</Button>
+              </AddDonationDialog>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+      <div className={isReadOnly ? "lg:col-span-3" : "lg:col-span-2"}>
         <h3 className="text-2xl font-headline mb-4 flex items-center gap-2">
             <Gift className="w-6 h-6" /> Donation Entries
         </h3>
@@ -56,7 +58,7 @@ export function DonationTracker({ event }: { event: Event }) {
                   <TableHead>Type</TableHead>
                   <TableHead>Details / Amount</TableHead>
                   <TableHead>Date</TableHead>
-                  <TableHead className="w-[50px]"></TableHead>
+                  {!isReadOnly && <TableHead className="w-[50px]"></TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -77,41 +79,43 @@ export function DonationTracker({ event }: { event: Event }) {
                         }
                     </TableCell>
                     <TableCell className="text-muted-foreground whitespace-nowrap">{format(new Date(donation.createdAt), 'MMM d, yyyy')}</TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <AddDonationDialog event={event} donationToEdit={donation}>
-                             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                <Pencil className="mr-2 h-4 w-4" /> Edit
-                             </DropdownMenuItem>
-                          </AddDonationDialog>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <DropdownMenuItem className="text-destructive focus:bg-destructive/10" onSelect={(e) => e.preventDefault()}>
-                                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                    {!isReadOnly && (
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <AddDonationDialog event={event} donationToEdit={donation}>
+                              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                  <Pencil className="mr-2 h-4 w-4" /> Edit
                               </DropdownMenuItem>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  This will permanently delete this donation record. This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDeleteDonation(donation.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+                            </AddDonationDialog>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <DropdownMenuItem className="text-destructive focus:bg-destructive/10" onSelect={(e) => e.preventDefault()}>
+                                    <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                </DropdownMenuItem>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This will permanently delete this donation record. This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteDonation(donation.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>

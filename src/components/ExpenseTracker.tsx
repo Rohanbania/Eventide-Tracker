@@ -14,7 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from '@/hooks/use-toast';
 import { AddExpenseDialog } from './AddExpenseDialog';
 
-export function ExpenseTracker({ event }: { event: Event }) {
+export function ExpenseTracker({ event, isReadOnly = false }: { event: Event, isReadOnly?: boolean }) {
   const { deleteExpense } = useEvents();
 
   const handleDeleteExpense = async (expenseId: string) => {
@@ -30,20 +30,22 @@ export function ExpenseTracker({ event }: { event: Event }) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-      <div className="lg:col-span-1">
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-headline">Record Expense</CardTitle>
-            <CardDescription>Add a new expense for this event.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <AddExpenseDialog event={event}>
-                <Button variant="outline" className="w-full"><PlusCircle/> Add New Expense</Button>
-            </AddExpenseDialog>
-          </CardContent>
-        </Card>
-      </div>
-      <div className="lg:col-span-2">
+      {!isReadOnly && (
+        <div className="lg:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-headline">Record Expense</CardTitle>
+              <CardDescription>Add a new expense for this event.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AddExpenseDialog event={event}>
+                  <Button variant="outline" className="w-full"><PlusCircle/> Add New Expense</Button>
+              </AddExpenseDialog>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+      <div className={isReadOnly ? "lg:col-span-3" : "lg:col-span-2"}>
         <h3 className="text-2xl font-headline mb-4 flex items-center gap-2">
             <IndianRupee className="w-6 h-6" /> Expense Entries
         </h3>
@@ -57,7 +59,7 @@ export function ExpenseTracker({ event }: { event: Event }) {
                   <TableHead>Type</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
-                  <TableHead className="w-[50px]"></TableHead>
+                  {!isReadOnly && <TableHead className="w-[50px]"></TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -73,50 +75,52 @@ export function ExpenseTracker({ event }: { event: Event }) {
                     </TableCell>
                     <TableCell className="text-muted-foreground whitespace-nowrap">{format(new Date(expense.createdAt), 'MMM d, yyyy')}</TableCell>
                     <TableCell className="text-right font-mono text-destructive/80 whitespace-nowrap">₹{expense.amount.toFixed(2)}</TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <AddExpenseDialog event={event} expenseToEdit={expense}>
-                             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                <Pencil className="mr-2 h-4 w-4" /> Edit
-                             </DropdownMenuItem>
-                          </AddExpenseDialog>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <DropdownMenuItem className="text-destructive focus:bg-destructive/10" onSelect={(e) => e.preventDefault()}>
-                                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                    {!isReadOnly && (
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <AddExpenseDialog event={event} expenseToEdit={expense}>
+                              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                  <Pencil className="mr-2 h-4 w-4" /> Edit
                               </DropdownMenuItem>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  This will permanently delete this expense record. This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDeleteExpense(expense.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+                            </AddExpenseDialog>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <DropdownMenuItem className="text-destructive focus:bg-destructive/10" onSelect={(e) => e.preventDefault()}>
+                                    <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                </DropdownMenuItem>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This will permanently delete this expense record. This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteExpense(expense.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
               {event.expenses.length > 0 && (
                   <TableFooter>
                       <TableRow>
-                          <TableCell colSpan={3} className="font-bold text-base md:text-lg">Total Expenses</TableCell>
+                          <TableCell colSpan={isReadOnly ? 3 : 4} className="font-bold text-base md:text-lg">Total Expenses</TableCell>
                           <TableCell className="text-right font-bold font-mono text-base md:text-lg text-destructive/80 whitespace-nowrap">₹{totalExpenses.toFixed(2)}</TableCell>
-                          <TableCell></TableCell>
+                          {!isReadOnly && <TableCell></TableCell>}
                       </TableRow>
                   </TableFooter>
               )}

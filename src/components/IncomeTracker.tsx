@@ -14,7 +14,7 @@ import { AddIncomeDialog } from './AddIncomeDialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 import { toast } from '@/hooks/use-toast';
 
-export function IncomeTracker({ event }: { event: Event }) {
+export function IncomeTracker({ event, isReadOnly = false }: { event: Event, isReadOnly?: boolean }) {
   const { deleteIncome } = useEvents();
   
   const totalIncome = event.incomes.reduce((sum, income) => sum + income.amount, 0);
@@ -31,20 +31,22 @@ export function IncomeTracker({ event }: { event: Event }) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-      <div className="lg:col-span-1">
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-headline">Record Income</CardTitle>
-            <CardDescription>Add a new source of revenue from this event.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <AddIncomeDialog event={event}>
-                <Button variant="outline" className="w-full"><PlusCircle /> Add New Income</Button>
-            </AddIncomeDialog>
-          </CardContent>
-        </Card>
-      </div>
-      <div className="lg:col-span-2">
+      {!isReadOnly && (
+        <div className="lg:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-headline">Record Income</CardTitle>
+              <CardDescription>Add a new source of revenue from this event.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AddIncomeDialog event={event}>
+                  <Button variant="outline" className="w-full"><PlusCircle /> Add New Income</Button>
+              </AddIncomeDialog>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+      <div className={isReadOnly ? "lg:col-span-3" : "lg:col-span-2"}>
         <h3 className="text-2xl font-headline mb-4 flex items-center gap-2">
             <IndianRupee className="w-6 h-6" /> Income Entries
         </h3>
@@ -58,7 +60,7 @@ export function IncomeTracker({ event }: { event: Event }) {
                   <TableHead>Type</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
-                  <TableHead className="w-[50px]"></TableHead>
+                  {!isReadOnly && <TableHead className="w-[50px]"></TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -74,50 +76,52 @@ export function IncomeTracker({ event }: { event: Event }) {
                     </TableCell>
                     <TableCell className="text-muted-foreground whitespace-nowrap">{format(new Date(income.createdAt), 'MMM d, yyyy')}</TableCell>
                     <TableCell className="text-right font-mono whitespace-nowrap text-green-600">₹{income.amount.toFixed(2)}</TableCell>
-                     <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <AddIncomeDialog event={event} incomeToEdit={income}>
-                             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                <Pencil className="mr-2 h-4 w-4" /> Edit
-                             </DropdownMenuItem>
-                          </AddIncomeDialog>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <DropdownMenuItem className="text-destructive focus:bg-destructive/10" onSelect={(e) => e.preventDefault()}>
-                                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                    {!isReadOnly && (
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <AddIncomeDialog event={event} incomeToEdit={income}>
+                              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                  <Pencil className="mr-2 h-4 w-4" /> Edit
                               </DropdownMenuItem>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  This will permanently delete this income record. This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDeleteIncome(income.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+                            </AddIncomeDialog>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <DropdownMenuItem className="text-destructive focus:bg-destructive/10" onSelect={(e) => e.preventDefault()}>
+                                    <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                </DropdownMenuItem>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This will permanently delete this income record. This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteIncome(income.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
                {event.incomes.length > 0 && (
                   <TableFooter>
                       <TableRow>
-                          <TableCell colSpan={3} className="font-bold text-base md:text-lg">Total Income</TableCell>
+                          <TableCell colSpan={isReadOnly ? 3 : 4} className="font-bold text-base md:text-lg">Total Income</TableCell>
                           <TableCell className="text-right font-bold font-mono text-base md:text-lg whitespace-nowrap text-green-600">₹{totalIncome.toFixed(2)}</TableCell>
-                          <TableCell></TableCell>
+                          {!isReadOnly && <TableCell></TableCell>}
                       </TableRow>
                   </TableFooter>
                )}
