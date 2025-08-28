@@ -408,9 +408,9 @@ export function ReportView({ event }: { event: Event }) {
               </CardHeader>
               <CardContent>
                   {incomeChartData.length > 0 ? (
-                  <ChartContainer config={chartConfig} className="min-h-[250px] w-full">
+                  <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
                       <ResponsiveContainer>
-                          <BarChart accessibilityLayer data={incomeChartData} margin={{ top: 20, right: 20, left: -10, bottom: 5, }}>
+                          <BarChart accessibilityLayer data={incomeChartData} margin={{ top: 20, right: 20, left: -10, bottom: 40 }}>
                               <CartesianGrid vertical={false} />
                               <XAxis
                                 dataKey="name"
@@ -418,6 +418,8 @@ export function ReportView({ event }: { event: Event }) {
                                 tickMargin={10}
                                 axisLine={false}
                                 interval={0}
+                                angle={-45}
+                                textAnchor="end"
                               />
                               <YAxis tickFormatter={(value) => `₹${value / 1000}k`} />
                               <ChartTooltip content={<ChartTooltipContent />} />
@@ -442,9 +444,9 @@ export function ReportView({ event }: { event: Event }) {
               </CardHeader>
               <CardContent>
                   {expenseChartData.length > 0 ? (
-                  <ChartContainer config={chartConfig} className="min-h-[250px] w-full">
+                  <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
                       <ResponsiveContainer>
-                          <BarChart accessibilityLayer data={expenseChartData} margin={{ top: 20, right: 20, left: -10, bottom: 5, }}>
+                          <BarChart accessibilityLayer data={expenseChartData} margin={{ top: 20, right: 20, left: -10, bottom: 40 }}>
                               <CartesianGrid vertical={false} />
                               <XAxis
                                 dataKey="name"
@@ -452,6 +454,8 @@ export function ReportView({ event }: { event: Event }) {
                                 tickMargin={10}
                                 axisLine={false}
                                 interval={0}
+                                angle={-45}
+                                textAnchor="end"
                               />
                               <YAxis tickFormatter={(value) => `₹${value / 1000}k`} />
                               <ChartTooltip content={<ChartTooltipContent />} />
