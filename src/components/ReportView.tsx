@@ -13,6 +13,7 @@ import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { ToastAction } from '@/components/ui/toast';
+import html2canvas from 'html2canvas';
 
 const formatCurrency = (amount: number) => {
     return `Rs ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -34,15 +35,32 @@ export function ReportView({ event }: { event: Event }) {
   const [isDownloading, setIsDownloading] = useState(false);
   const { toast } = useToast();
   
-  const handleDownloadPdf = () => {
+  const handleDownloadPdf = async () => {
     setIsDownloading(true);
+    
+    // Get the chart elements by their IDs
+    const incomeChartEl = document.getElementById('income-chart');
+    const expenseChartEl = document.getElementById('expense-chart');
 
-    // This ensures the UI updates to show the loading state before the heavy task starts.
-    setTimeout(() => {
-      try {
+    if (!incomeChartEl || !expenseChartEl) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Chart elements not found for PDF generation."
+        });
+        setIsDownloading(false);
+        return;
+    }
+
+    try {
+        const incomeCanvas = await html2canvas(incomeChartEl, { backgroundColor: null });
+        const expenseCanvas = await html2canvas(expenseChartEl, { backgroundColor: null });
+        
+        const incomeImgData = incomeCanvas.toDataURL('image/png');
+        const expenseImgData = expenseCanvas.toDataURL('image/png');
+
         const doc = new jsPDF();
         
-        // --- Document Content ---
         const monetaryDonations = event.donations?.filter(d => d.donationType === 'Cash' || d.donationType === 'Bank') || [];
         
         const cashIncomes = event.incomes.filter(i => i.transactionType === 'Cash').reduce((acc, i) => acc + i.amount, 0) + monetaryDonations.filter(d => d.donationType === 'Cash').reduce((acc, d) => acc + (d.amount || 0), 0);
@@ -72,7 +90,7 @@ export function ReportView({ event }: { event: Event }) {
 
         // Header
         doc.setFontSize(22);
-        doc.setTextColor(115, 169, 173); // Muted Teal
+        doc.setTextColor(115, 169, 173);
         doc.text("Eventide Tracker", 14, 22);
 
         // Report Title
@@ -95,7 +113,6 @@ export function ReportView({ event }: { event: Event }) {
             )
         }
 
-
         autoTable(doc, {
             startY: finalY,
             head: [['Category', 'Income', 'Expenses', 'Balance']],
@@ -109,8 +126,22 @@ export function ReportView({ event }: { event: Event }) {
             footStyles: { fillColor: [245, 245, 245], textColor: [40, 40, 40], fontStyle: 'bold'  }
         });
 
-        finalY = (doc as any).lastAutoTable.finalY + 15;
+        finalY = (doc as any).lastAutoTable.finalY + 10;
         
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Visual Breakdown', 14, finalY);
+        finalY += 5;
+
+        const chartWidth = 85;
+        const chartHeight = (chartWidth * incomeCanvas.height) / incomeCanvas.width;
+        
+        doc.addImage(incomeImgData, 'PNG', 14, finalY, chartWidth, chartHeight);
+        doc.addImage(expenseImgData, 'PNG', 110, finalY, chartWidth, chartHeight);
+
+        finalY += chartHeight + 15;
+
+
         const tableConfig = {
           theme: 'striped' as const,
           headStyles: { fillColor: [208, 191, 255], textColor: [40, 40, 40], fontStyle: 'bold' as const },
@@ -122,8 +153,9 @@ export function ReportView({ event }: { event: Event }) {
           }
         };
         
-        // Income Table (including monetary donations)
         if (allIncomes.length > 0) {
+            doc.addPage();
+            finalY = 20;
             doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
             doc.text('Income Breakdown', 14, finalY);
@@ -137,9 +169,11 @@ export function ReportView({ event }: { event: Event }) {
             finalY = (doc as any).lastAutoTable.finalY + 15;
         }
 
-
-        // Expense Table
         if (event.expenses.length > 0) {
+            if ((doc.internal.pageSize.height - finalY) < 50) { // Check if new page is needed
+                doc.addPage();
+                finalY = 20;
+            }
             doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
             doc.text('Expense Breakdown', 14, finalY);
@@ -153,8 +187,11 @@ export function ReportView({ event }: { event: Event }) {
             finalY = (doc as any).lastAutoTable.finalY + 15;
         }
 
-        // Donation Table
         if (event.donations && event.donations.length > 0) {
+             if ((doc.internal.pageSize.height - finalY) < 50) { // Check if new page is needed
+                doc.addPage();
+                finalY = 20;
+            }
             doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
             doc.text('Donation Breakdown', 14, finalY);
@@ -191,7 +228,6 @@ export function ReportView({ event }: { event: Event }) {
       } finally {
         setIsDownloading(false);
       }
-    }, 100); // A small delay to allow the UI to update
   };
   
   const monetaryDonations = event.donations?.filter(d => d.donationType === 'Cash' || d.donationType === 'Bank') || [];
@@ -302,7 +338,7 @@ export function ReportView({ event }: { event: Event }) {
       </div>
       
       <div className="grid md:grid-cols-2 gap-8">
-        <Card>
+        <Card id="income-chart">
           <CardHeader>
             <CardTitle className="font-headline flex items-center gap-2">
               <BarChart2 className="w-6 h-6 text-accent" />
@@ -334,7 +370,7 @@ export function ReportView({ event }: { event: Event }) {
             )}
           </CardContent>
         </Card>
-        <Card>
+        <Card id="expense-chart">
           <CardHeader>
             <CardTitle className="font-headline flex items-center gap-2">
               <BarChart2 className="w-6 h-6 text-accent" />
