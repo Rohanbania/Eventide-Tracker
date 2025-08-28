@@ -1,13 +1,13 @@
 
 "use client";
 
-import { useState } from 'react';
-import type { Event, Income, Donation } from '@/lib/types';
+import { useState }from 'react';
+import type { Event } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart2, FileText, IndianRupee, Wallet, Download, Landmark, Coins, Loader2 } from 'lucide-react';
+import { BarChart2, IndianRupee, Wallet, Download, Landmark, Coins, Loader2, Share2 } from 'lucide-react';
 import { ChartContainer, ChartConfig, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Legend } from "recharts"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts"
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
@@ -34,12 +34,28 @@ export function ReportView({ event }: { event: Event }) {
   const [isDownloading, setIsDownloading] = useState(false);
   const { toast } = useToast();
   
+  const handleShare = () => {
+    const shareUrl = `${window.location.origin}/share/event/${event.id}`;
+    navigator.clipboard.writeText(shareUrl);
+    toast({
+      title: "Link Copied!",
+      description: "The shareable link has been copied to your clipboard.",
+    });
+  };
+
   const handleDownloadPdf = async () => {
     setIsDownloading(true);
     
     try {
         const doc = new jsPDF();
         
+        // Noto Sans font data (replace with actual Base64 data)
+        // This is a placeholder. You would fetch or have the Base64 string of the font here.
+        // For this example, we'll assume it's loaded and skip the font embedding for brevity.
+        // doc.addFileToVFS('NotoSans-Regular.ttf', notoSansRegularBase64);
+        // doc.addFont('NotoSans-Regular.ttf', 'NotoSans', 'normal');
+        // doc.setFont('NotoSans');
+
         const monetaryDonations = event.donations?.filter(d => d.donationType === 'Cash' || d.donationType === 'Bank') || [];
         
         const cashIncomes = event.incomes.filter(i => i.transactionType === 'Cash').reduce((acc, i) => acc + i.amount, 0) + monetaryDonations.filter(d => d.donationType === 'Cash').reduce((acc, d) => acc + (d.amount || 0), 0);
@@ -71,11 +87,10 @@ export function ReportView({ event }: { event: Event }) {
         const accentColor = "#73A9AD"; // Muted Teal from theme
         doc.setFillColor(accentColor);
         doc.setDrawColor(accentColor);
-        
-        // Draw Sparkles Icon
+
         const iconPaths = [
-            "M10 3L8 8L3 10L8 12L10 17L12 12L17 10L12 8L10 3Z",
-            "M21 3L19.5 6.5L16 8L19.5 9.5L21 13L22.5 9.5L26 8L22.5 6.5L21 3Z"
+          "M10 3L8 8L3 10L8 12L10 17L12 12L17 10L12 8L10 3Z",
+          "M21 3L19.5 6.5L16 8L19.5 9.5L21 13L22.5 9.5L26 8L22.5 6.5L21 3Z"
         ];
         
         const scale = 0.35;
@@ -218,11 +233,10 @@ export function ReportView({ event }: { event: Event }) {
                     d.donationType === 'Goods' ? d.goods : formatCurrency(d.amount || 0)
                 ]),
             });
-            finalY = (doc as any).lastAutoTable.finalY + 15;
         }
         
-        doc.save(`report-${event.name.toLowerCase().replace(/ /g, '-')}.pdf`);
         const pdfDataUri = doc.output('datauristring');
+        doc.save(`report-${event.name.toLowerCase().replace(/ /g, '-')}.pdf`);
         
         toast({
             title: "Download Complete",
@@ -280,7 +294,10 @@ export function ReportView({ event }: { event: Event }) {
 
   return (
     <div className="space-y-8">
-       <div className="flex justify-end">
+       <div className="flex justify-end gap-2">
+            <Button onClick={handleShare} variant="outline">
+              <Share2 className="w-4 h-4 mr-2" /> Share
+            </Button>
             <Button onClick={handleDownloadPdf} disabled={isDownloading}>
                 {isDownloading ? (
                   <>
