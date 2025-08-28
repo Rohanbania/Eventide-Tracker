@@ -14,7 +14,6 @@ import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { ToastAction } from '@/components/ui/toast';
 import html2canvas from 'html2canvas';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from './ui/carousel';
 
 const formatCurrency = (amount: number) => {
     return `Rs ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -390,91 +389,79 @@ export function ReportView({ event }: { event: Event }) {
         </Card>
       </div>
 
-      <Carousel
-        opts={{
-          align: "start",
-        }}
-        className="w-full"
-      >
-        <CarouselContent>
-          <CarouselItem>
-            <Card id="income-chart">
-              <CardHeader>
-                  <CardTitle className="font-headline flex items-center gap-2">
-                  <BarChart2 className="w-6 h-6 text-accent" />
-                  Income Breakdown
-                  </CardTitle>
-                  <CardDescription>A visual breakdown of all income sources.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                  {incomeChartData.length > 0 ? (
-                  <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
-                      <ResponsiveContainer>
-                          <BarChart accessibilityLayer data={incomeChartData} margin={{ top: 20, right: 20, left: -10, bottom: 40 }}>
-                              <CartesianGrid vertical={false} />
-                              <XAxis
-                                dataKey="name"
-                                tickLine={false}
-                                tickMargin={10}
-                                axisLine={false}
-                                interval={0}
-                                angle={-45}
-                                textAnchor="end"
-                              />
-                              <YAxis tickFormatter={(value) => `₹${value / 1000}k`} />
-                              <ChartTooltip content={<ChartTooltipContent />} />
-                              <Bar dataKey="income" fill="var(--color-income)" radius={4} />
-                          </BarChart>
-                      </ResponsiveContainer>
-                  </ChartContainer>
-                  ) : (
-                  <p className="text-muted-foreground text-center py-8">No income data to display.</p>
-                  )}
-              </CardContent>
-            </Card>
-          </CarouselItem>
-          <CarouselItem>
-            <Card id="expense-chart">
-              <CardHeader>
-                  <CardTitle className="font-headline flex items-center gap-2">
-                  <BarChart2 className="w-6 h-6 text-accent" />
-                  Expense Breakdown
-                  </CardTitle>
-                  <CardDescription>A visual breakdown of all expenses.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                  {expenseChartData.length > 0 ? (
-                  <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
-                      <ResponsiveContainer>
-                          <BarChart accessibilityLayer data={expenseChartData} margin={{ top: 20, right: 20, left: -10, bottom: 40 }}>
-                              <CartesianGrid vertical={false} />
-                              <XAxis
-                                dataKey="name"
-                                tickLine={false}
-                                tickMargin={10}
-                                axisLine={false}
-                                interval={0}
-                                angle={-45}
-                                textAnchor="end"
-                              />
-                              <YAxis tickFormatter={(value) => `₹${value / 1000}k`} />
-                              <ChartTooltip content={<ChartTooltipContent />} />
-                              <Bar dataKey="expense" fill="var(--color-expense)" radius={4} />
-                          </BarChart>
-                      </ResponsiveContainer>
-                  </ChartContainer>
-                  ) : (
-                  <p className="text-muted-foreground text-center py-8">No expense data to display.</p>
-                  )}
-              </CardContent>
-            </Card>
-          </CarouselItem>
-        </CarouselContent>
-        <CarouselPrevious className="hidden md:flex" />
-        <CarouselNext className="hidden md:flex" />
-      </Carousel>
+      <div className="space-y-8">
+        <Card id="income-chart">
+          <CardHeader>
+              <CardTitle className="font-headline flex items-center gap-2">
+              <BarChart2 className="w-6 h-6 text-accent" />
+              Income Breakdown
+              </CardTitle>
+              <CardDescription>A visual breakdown of all income sources.</CardDescription>
+          </CardHeader>
+          <CardContent>
+              {incomeChartData.length > 0 ? (
+              <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
+                  <ResponsiveContainer>
+                      <BarChart accessibilityLayer data={incomeChartData} margin={{ top: 20, right: 20, left: -10, bottom: 80 }}>
+                          <CartesianGrid vertical={false} />
+                          <XAxis
+                            dataKey="name"
+                            tickLine={false}
+                            tickMargin={10}
+                            axisLine={false}
+                            interval={0}
+                            angle={-45}
+                            textAnchor="end"
+                            height={100}
+                          />
+                          <YAxis tickFormatter={(value) => `₹${value / 1000}k`} />
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          <Bar dataKey="income" fill="var(--color-income)" radius={4} />
+                      </BarChart>
+                  </ResponsiveContainer>
+              </ChartContainer>
+              ) : (
+              <p className="text-muted-foreground text-center py-8">No income data to display.</p>
+              )}
+          </CardContent>
+        </Card>
+        <Card id="expense-chart">
+          <CardHeader>
+              <CardTitle className="font-headline flex items-center gap-2">
+              <BarChart2 className="w-6 h-6 text-accent" />
+              Expense Breakdown
+              </CardTitle>
+              <CardDescription>A visual breakdown of all expenses.</CardDescription>
+          </CardHeader>
+          <CardContent>
+              {expenseChartData.length > 0 ? (
+              <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
+                  <ResponsiveContainer>
+                      <BarChart accessibilityLayer data={expenseChartData} margin={{ top: 20, right: 20, left: -10, bottom: 80 }}>
+                          <CartesianGrid vertical={false} />
+                          <XAxis
+                            dataKey="name"
+                            tickLine={false}
+                            tickMargin={10}
+                            axisLine={false}
+                            interval={0}
+                            angle={-45}
+                            textAnchor="end"
+                            height={100}
+                          />
+                          <YAxis tickFormatter={(value) => `₹${value / 1000}k`} />
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          <Bar dataKey="expense" fill="var(--color-expense)" radius={4} />
+                      </BarChart>
+                  </ResponsiveContainer>
+              </ChartContainer>
+              ) : (
+              <p className="text-muted-foreground text-center py-8">No expense data to display.</p>
+              )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
 
-    
