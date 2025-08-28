@@ -7,7 +7,7 @@ import { ExpenseTracker } from '@/components/ExpenseTracker';
 import { IncomeTracker } from '@/components/IncomeTracker';
 import { ReportView } from '@/components/ReportView';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, NotebookText, DollarSign, BarChart2, Sparkles, Pencil, Trash2, Gift, MoreVertical } from 'lucide-react';
+import { Calendar, NotebookText, BarChart2, Sparkles, Pencil, Trash2, Gift, MoreVertical, IndianRupee } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -118,7 +118,7 @@ export default function EventDetailPage() {
       <Tabs defaultValue={defaultTab} className="w-full">
         <TabsList className="w-full overflow-x-auto justify-start md:w-auto md:grid md:grid-cols-4 mb-6">
           {features.expenses && <TabsTrigger value="expenses"><NotebookText className="w-4 h-4 mr-2" /> Expenses</TabsTrigger>}
-          {features.income && <TabsTrigger value="income"><DollarSign className="w-4 h-4 mr-2" /> Income</TabsTrigger>}
+          {features.income && <TabsTrigger value="income"><IndianRupee className="w-4 h-4 mr-2" /> Income</TabsTrigger>}
           {features.donations && <TabsTrigger value="donations"><Gift className="w-4 h-4 mr-2" /> Donations</TabsTrigger>}
           <TabsTrigger value="reports">
             <BarChart2 className="w-4 h-4 mr-2" /> Reports
