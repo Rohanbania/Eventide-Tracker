@@ -2,7 +2,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
-import { collection, addDoc, query, where, onSnapshot, doc, updateDoc, orderBy, deleteDoc, arrayUnion } from 'firebase/firestore';
+import { collection, addDoc, query, where, onSnapshot, doc, updateDoc, orderBy, deleteDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import type { Event, Expense, Income, TransactionType, Donation, EventFeatures, Author } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './AuthContext';
@@ -18,6 +18,7 @@ interface EventData {
 
 interface EventContextType {
   events: Event[];
+  pendingInvitations: Event[];
   loading: boolean;
   getEventById: (id: string) => Event | undefined;
   addEvent: (data: EventData) => Promise<void>;
@@ -33,12 +34,15 @@ interface EventContextType {
   updateDonation: (eventId: string, donation: Donation) => Promise<void>;
   deleteDonation: (eventId: string, donationId: string) => Promise<void>;
   addCollaborator: (eventId: string, email: string) => Promise<void>;
+  acceptInvitation: (eventId: string, userEmail: string) => Promise<void>;
+  declineInvitation: (eventId: string, userEmail: string) => Promise<void>;
 }
 
 const EventContext = createContext<EventContextType | undefined>(undefined);
 
 export const EventProvider = ({ children }: { children: ReactNode }) => {
   const [events, setEvents] = useState<Event[]>([]);
+  const [pendingInvitations, setPendingInvitations] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -47,42 +51,42 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     if (user) {
       setLoading(true);
       
-      const ownedQuery = query(collection(db, "events"), where("userId", "==", user.uid));
-      const sharedQuery = query(collection(db, "events"), where("collaborators", "array-contains", user.email));
+      const q = query(
+        collection(db, "events"), 
+        where("collaborators", "array-contains", user.email)
+      );
 
-      const unsubOwned = onSnapshot(ownedQuery, (querySnapshot) => {
-        const ownedEvents = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
-        setEvents(prevEvents => {
-          const otherEvents = prevEvents.filter(e => e.userId !== user.uid);
-          return [...otherEvents, ...ownedEvents].sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
-        });
+      const unsub = onSnapshot(q, (querySnapshot) => {
+        const userEvents = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
+        setEvents(userEvents.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis()));
         setLoading(false);
       }, (error) => {
-        console.error("Error fetching owned events:", error);
+        console.error("Error fetching events:", error);
         toast({ variant: 'destructive', title: "Error", description: "Could not fetch your events."});
         setLoading(false);
       });
+      
+      const invitationsQuery = query(
+        collection(db, "events"),
+        where("pendingCollaborators", "array-contains", user.email)
+      );
 
-      const unsubShared = onSnapshot(sharedQuery, (querySnapshot) => {
-          const sharedEvents = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
-          setEvents(prevEvents => {
-            const otherEvents = prevEvents.filter(e => !e.collaborators?.includes(user.email || ''));
-            return [...otherEvents, ...sharedEvents].sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
-        });
-        setLoading(false);
+      const unsubInvitations = onSnapshot(invitationsQuery, (querySnapshot) => {
+          const invitations = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
+          setPendingInvitations(invitations);
       }, (error) => {
-        console.error("Error fetching shared events:", error);
-        toast({ variant: 'destructive', title: "Error", description: "Could not fetch shared events."});
-        setLoading(false);
+          console.error("Error fetching invitations:", error);
+          // Don't show toast for this, it's a background process
       });
 
 
       return () => {
-        unsubOwned();
-        unsubShared();
+        unsub();
+        unsubInvitations();
       };
     } else {
       setEvents([]);
+      setPendingInvitations([]);
       setLoading(false);
     }
   }, [user, toast]);
@@ -92,16 +96,17 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
   }, [events]);
 
   const addEvent = async (data: EventData) => {
-    if (!user) return;
+    if (!user || !user.email) return;
     try {
       await addDoc(collection(db, "events"), {
         userId: user.uid,
-        ownerName: user.displayName,
+        ownerName: user.displayName || 'Unnamed User',
         ...data,
         expenses: [],
         incomes: [],
         donations: [],
         collaborators: [user.email],
+        pendingCollaborators: [],
         createdAt: Timestamp.now(),
       });
       toast({
@@ -142,18 +147,59 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     try {
         const eventRef = doc(db, "events", eventId);
         await updateDoc(eventRef, {
-            collaborators: arrayUnion(email)
+            pendingCollaborators: arrayUnion(email)
         });
         toast({
-            title: "Collaborator Added",
-            description: `${email} can now edit this event.`,
+            title: "Invitation Sent",
+            description: `${email} has been invited to collaborate.`,
         });
     } catch (error) {
         console.error("Error adding collaborator:", error);
         toast({
             variant: 'destructive',
             title: "Error",
-            description: "Could not add collaborator.",
+            description: "Could not send invitation.",
+        });
+    }
+  };
+  
+  const acceptInvitation = async (eventId: string, userEmail: string) => {
+    try {
+      const eventRef = doc(db, "events", eventId);
+      await updateDoc(eventRef, {
+        collaborators: arrayUnion(userEmail),
+        pendingCollaborators: arrayRemove(userEmail)
+      });
+       toast({
+        title: "Invitation Accepted",
+        description: "You are now collaborating on the event.",
+      });
+    } catch (error) {
+       console.error("Error accepting invitation:", error);
+        toast({
+            variant: 'destructive',
+            title: "Error",
+            description: "Could not accept the invitation.",
+        });
+    }
+  };
+
+  const declineInvitation = async (eventId: string, userEmail: string) => {
+    try {
+      const eventRef = doc(db, "events", eventId);
+      await updateDoc(eventRef, {
+        pendingCollaborators: arrayRemove(userEmail)
+      });
+       toast({
+        title: "Invitation Declined",
+        description: "You have declined the invitation.",
+      });
+    } catch (error) {
+       console.error("Error declining invitation:", error);
+        toast({
+            variant: 'destructive',
+            title: "Error",
+            description: "Could not decline the invitation.",
         });
     }
   };
@@ -344,6 +390,7 @@ const deleteDonation = async (eventId: string, donationId: string) => {
 
   const value = {
     events,
+    pendingInvitations,
     loading,
     getEventById,
     addEvent,
@@ -358,7 +405,9 @@ const deleteDonation = async (eventId: string, donationId: string) => {
     addDonation,
     updateDonation,
     deleteDonation,
-    addCollaborator
+    addCollaborator,
+    acceptInvitation,
+    declineInvitation,
   };
 
   return <EventContext.Provider value={value}>{children}</EventContext.Provider>;

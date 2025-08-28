@@ -55,6 +55,7 @@ export interface Event {
   expenses: Expense[];
   incomes: Income[];
   donations: Donation[];
-  collaborators?: string[];
+  collaborators: string[];
+  pendingCollaborators?: string[];
   createdAt: Timestamp;
 }

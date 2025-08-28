@@ -44,6 +44,10 @@ export function InviteCollaboratorDialog({ event }: InviteCollaboratorDialogProp
         toast({ variant: 'destructive', title: "Error", description: "This user is already a collaborator." });
         return;
     }
+    if (event.pendingCollaborators?.includes(values.email)) {
+        toast({ variant: 'destructive', title: "Error", description: "This user has already been invited." });
+        return;
+    }
     
     addCollaborator(event.id, values.email);
     form.reset();
@@ -66,19 +70,28 @@ export function InviteCollaboratorDialog({ event }: InviteCollaboratorDialogProp
         <DialogHeader>
           <DialogTitle className="font-headline">Invite Collaborator</DialogTitle>
           <DialogDescription>
-            Enter the email of the user you want to invite to collaborate on "{event.name}". They will be able to add and edit transactions.
+            Enter the email of the user you want to invite to collaborate on "{event.name}". They will receive a notification to accept or decline.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-            <h4 className="text-sm font-medium">Current Collaborators</h4>
-            <div className="flex flex-wrap gap-2">
-                {event.collaborators?.map(email => (
-                    <Badge key={email} variant="secondary" className="flex items-center gap-2">
-                        <span>{email}</span>
-                        {email === user?.email && <span className="text-xs text-muted-foreground">(You)</span>}
-                    </Badge>
-                ))}
+        <div className="space-y-4 py-2">
+            <div>
+                <h4 className="text-sm font-medium mb-2">Current Collaborators</h4>
+                <div className="flex flex-wrap gap-2">
+                    {event.collaborators?.map(email => (
+                        <Badge key={email} variant="secondary">{email}</Badge>
+                    ))}
+                </div>
             </div>
+            {event.pendingCollaborators && event.pendingCollaborators.length > 0 && (
+                 <div>
+                    <h4 className="text-sm font-medium mb-2">Pending Invitations</h4>
+                    <div className="flex flex-wrap gap-2">
+                        {event.pendingCollaborators?.map(email => (
+                            <Badge key={email} variant="outline">{email}</Badge>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
