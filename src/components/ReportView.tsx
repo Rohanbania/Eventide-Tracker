@@ -64,8 +64,13 @@ export function ReportView({ event }: { event: Event }) {
         const netProfit = totalIncome - totalExpenses;
 
         const allIncomes = [
-            ...event.incomes,
-            ...monetaryDonations.map(d => ({...d, source: `${d.source} (Donation)`}))
+            ...event.incomes.map(i => ({...i, type: i.transactionType})),
+            ...monetaryDonations.map(d => ({
+                ...d,
+                source: `${d.source} (Donation)`,
+                amount: d.amount || 0,
+                type: d.donationType
+            }))
         ].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
 
@@ -145,7 +150,7 @@ export function ReportView({ event }: { event: Event }) {
             ...tableConfig,
             startY: finalY + 2,
             head: [['Source', 'Date', 'Type', 'Amount']],
-            body: allIncomes.map(i => [i.source, format(new Date(i.createdAt), 'MMM d, yyyy'), i.transactionType, formatCurrency(i.amount)]),
+            body: allIncomes.map(i => [i.source, format(new Date(i.createdAt), 'MMM d, yyyy'), i.type, formatCurrency(i.amount)]),
             foot: [['Total Income', '', '', formatCurrency(totalIncome)]],
             });
             finalY = (doc as any).lastAutoTable.finalY + 15;
