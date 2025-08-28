@@ -1,20 +1,18 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow users to read, write, and delete their own events.
-    match /events/{eventId} {
-      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
-    }
     
-    // Allow anyone to read a single event from the public collection group.
     match /events/{eventId} {
-        allow get: if true;
+      // Allow anyone to read an event (for sharing)
+      allow get: if true;
+      
+      // Allow the user who created the event to do anything
+      allow list, create, update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
     }
 
-    // Disallow any other operations on the database.
+    // Default deny all other collections
     match /{document=**} {
       allow read, write: if false;
     }
