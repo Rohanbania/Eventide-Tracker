@@ -36,5 +36,3 @@ export const cleanupPendingOnInvitationAccept = functions.firestore
 
     return null;
   });
-
-    

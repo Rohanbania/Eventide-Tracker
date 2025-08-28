@@ -455,5 +455,3 @@ export const useEvents = () => {
   }
   return context;
 };
-
-    
