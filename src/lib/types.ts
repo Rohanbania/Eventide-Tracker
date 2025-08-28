@@ -45,6 +45,5 @@ export interface Event {
   expenses: Expense[];
   incomes: Income[];
   donations: Donation[];
-  expenseSummary?: string;
   createdAt: Timestamp;
 }

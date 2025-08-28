@@ -4,7 +4,6 @@
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import { collection, addDoc, query, where, onSnapshot, doc, updateDoc, orderBy, deleteDoc } from 'firebase/firestore';
 import type { Event, Expense, Income, TransactionType, Donation, EventFeatures } from '@/lib/types';
-import { summarizeExpense } from '@/ai/flows/summarize-expense';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './AuthContext';
 import { db } from '@/lib/firebase';
@@ -33,7 +32,6 @@ interface EventContextType {
   addDonation: (eventId: string, donation: Omit<Donation, 'id'>) => Promise<void>;
   updateDonation: (eventId: string, donation: Donation) => Promise<void>;
   deleteDonation: (eventId: string, donationId: string) => Promise<void>;
-  generateExpenseSummary: (eventId: string) => Promise<void>;
 }
 
 const EventContext = createContext<EventContextType | undefined>(undefined);
@@ -297,44 +295,6 @@ const deleteDonation = async (eventId: string, donationId: string) => {
     }
 };
 
-
-  const generateExpenseSummary = async (eventId: string) => {
-    const event = getEventById(eventId);
-    if (!event || event.expenses.length === 0) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "No expenses to summarize.",
-      });
-      return;
-    }
-
-    try {
-      const allNotes = event.expenses.map(e => `- ${e.notes} (Amount: $${e.amount})`).join('\n');
-      const result = await summarizeExpense({
-        eventName: event.name,
-        expenseNotes: allNotes,
-      });
-
-      const eventRef = doc(db, "events", eventId);
-      await updateDoc(eventRef, {
-        expenseSummary: result.summary
-      });
-
-      toast({
-        title: "Summary Generated",
-        description: "The AI summary has been successfully created.",
-      });
-    } catch (error) {
-      console.error("Failed to generate summary:", error);
-      toast({
-        variant: "destructive",
-        title: "AI Error",
-        description: "Could not generate summary. Please try again later.",
-      });
-    }
-  };
-
   const value = {
     events,
     loading,
@@ -351,7 +311,6 @@ const deleteDonation = async (eventId: string, donationId: string) => {
     addDonation,
     updateDonation,
     deleteDonation,
-    generateExpenseSummary,
   };
 
   return <EventContext.Provider value={value}>{children}</EventContext.Provider>;

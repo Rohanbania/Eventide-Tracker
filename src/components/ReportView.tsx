@@ -5,15 +5,13 @@ import { useState } from 'react';
 import type { Event, Income, Donation } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Sparkles, BarChart2, FileText, IndianRupee, Wallet, Download, Landmark, Coins, Loader2 } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
+import { BarChart2, FileText, IndianRupee, Wallet, Download, Landmark, Coins, Loader2 } from 'lucide-react';
 import { ChartContainer, ChartConfig, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts"
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { useEvents } from '@/contexts/EventContext';
 import { ToastAction } from '@/components/ui/toast';
 
 const formatCurrency = (amount: number) => {
@@ -29,16 +27,8 @@ const chartConfig = {
 
 
 export function ReportView({ event }: { event: Event }) {
-  const { generateExpenseSummary } = useEvents();
-  const [isLoading, setIsLoading] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const { toast } = useToast();
-
-  const handleGenerateSummary = async () => {
-    setIsLoading(true);
-    await generateExpenseSummary(event.id);
-    setIsLoading(false);
-  };
   
   const handleDownloadPdf = () => {
     setIsDownloading(true);
@@ -69,7 +59,7 @@ export function ReportView({ event }: { event: Event }) {
                 ...d,
                 source: `${d.source} (Donation)`,
                 amount: d.amount || 0,
-                type: d.donationType
+                type: d.donationType as 'Cash' | 'Bank'
             }))
         ].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
@@ -117,19 +107,6 @@ export function ReportView({ event }: { event: Event }) {
 
         finalY = (doc as any).lastAutoTable.finalY + 15;
         
-        // AI Summary
-        if (event.expenseSummary) {
-          doc.setFontSize(14);
-          doc.setFont('helvetica', 'bold');
-          doc.text('AI Expense Summary', 14, finalY);
-          finalY += 7;
-          doc.setFontSize(10);
-          doc.setFont('helvetica', 'normal');
-          const splitSummary = doc.splitTextToSize(event.expenseSummary, 180);
-          doc.text(splitSummary, 14, finalY);
-          finalY += (splitSummary.length * 5) + 10;
-        }
-
         const tableConfig = {
           theme: 'striped' as const,
           headStyles: { fillColor: [208, 191, 255], textColor: [40, 40, 40], fontStyle: 'bold' as const },
@@ -303,37 +280,6 @@ export function ReportView({ event }: { event: Event }) {
           </CardContent>
         </Card>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-headline flex items-center gap-2">
-            <FileText className="w-6 h-6 text-accent" />
-            Expense Summary
-          </CardTitle>
-          <CardDescription>
-            An AI-generated summary of your recorded expenses and key takeaways.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-3/4" />
-            </div>
-          ) : event.expenseSummary ? (
-            <p className="text-card-foreground/90 whitespace-pre-wrap leading-relaxed">
-              {event.expenseSummary}
-            </p>
-          ) : (
-             <p className="text-muted-foreground">No summary generated yet. Add some expenses and click the button to create one.</p>
-          )}
-           <Button onClick={handleGenerateSummary} disabled={isLoading || event.expenses.length === 0} className="mt-4">
-            <Sparkles className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            {isLoading ? 'Generating...' : 'Generate AI Summary'}
-          </Button>
-        </CardContent>
-      </Card>
       
       <Card>
         <CardHeader>
