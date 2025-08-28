@@ -74,33 +74,6 @@ export default function EventDetailPage() {
                   {format(parseISO(event.date), 'EEEE, MMMM d, yyyy')}
                 </p>
             </div>
-             <div className="flex items-center gap-2 self-start md:self-auto">
-                <CreateEventDialog eventToEdit={event}>
-                    <Button variant="outline" size="sm">
-                        <Pencil className="mr-2 h-4 w-4" /> Edit
-                    </Button>
-                </CreateEventDialog>
-                <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="sm">
-                            <Trash2 className="mr-2 h-4 w-4" /> Delete
-                        </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete the event
-                                and all associated income and expense data.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleDeleteEvent}>Continue</AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-            </div>
         </div>
         {event.description && (
           <p className="text-md text-foreground/80 mt-4 max-w-3xl">{event.description}</p>
