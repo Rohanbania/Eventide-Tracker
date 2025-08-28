@@ -70,7 +70,7 @@ export function ExpenseTracker({ event }: { event: Event }) {
                             <Badge variant={expense.transactionType === 'Bank' ? 'secondary' : 'outline'}>
                               {expense.transactionType}
                             </Badge>
-                            <span>{format(new Date(expense.createdAt), 'MMM d')}</span>
+                            <span className="md:hidden">{format(new Date(expense.createdAt), 'MMM d')}</span>
                           </div>
                       </div>
                     </TableCell>

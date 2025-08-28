@@ -71,7 +71,7 @@ export function IncomeTracker({ event }: { event: Event }) {
                                 <Badge variant={income.transactionType === 'Bank' ? 'secondary' : 'outline'}>
                                     {income.transactionType}
                                 </Badge>
-                                <span>{format(new Date(income.createdAt), 'MMM d')}</span>
+                                <span className="md:hidden">{format(new Date(income.createdAt), 'MMM d')}</span>
                             </div>
                         </div>
                     </TableCell>
