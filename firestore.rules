@@ -1,35 +1,19 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper function to check if a user is the owner
-    function isOwner(resource) {
-      return request.auth.uid == resource.data.userId;
-    }
-
-    // Helper function to check if a user is a collaborator
-    function isCollaborator(resource) {
-      return request.auth.token.email in resource.data.collaborators;
-    }
-    
-    // Helper function to check if a user is a pending collaborator
-    function isPendingCollaborator(resource) {
-      return request.auth.token.email in resource.data.pendingCollaborators;
-    }
-
+    // Only authenticated users can access the database
     match /events/{eventId} {
-      // Allow read access if the user is the owner OR a collaborator
-      allow read: if isOwner(resource) || isCollaborator(resource) || isPendingCollaborator(resource);
-
-      // Allow create access to any authenticated user
+      allow read: if request.auth != null && 
+        (resource.data.userId == request.auth.uid || request.auth.token.email in resource.data.collaborators);
+      
       allow create: if request.auth != null;
 
-      // Allow update if owner OR an existing collaborator OR a pending collaborator (to accept/decline)
-      allow update: if isOwner(resource) || isCollaborator(resource) || isPendingCollaborator(resource);
-
-      // Only the owner can delete the event
-      allow delete: if isOwner(resource);
+      // Allow update if user is the owner, a collaborator, or a pending collaborator
+      allow update: if request.auth != null &&
+        (resource.data.userId == request.auth.uid || request.auth.token.email in resource.data.collaborators || request.auth.token.email in resource.data.pendingCollaborators);
+        
+      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
   }
 }
