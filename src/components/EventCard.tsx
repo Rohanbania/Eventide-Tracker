@@ -60,7 +60,7 @@ export function EventCard({ event }: EventCardProps) {
        <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-accent rounded-lg blur opacity-0 group-hover:opacity-75 transition duration-1000 animate-pulse"></div>
         <Card className="relative h-full flex flex-col transition-all duration-300 before:absolute before:inset-0 before:-z-10 before:bg-gradient-to-tr before:from-primary/80 before:to-accent/80 before:rounded-lg before:[mask:linear-gradient(white,white)_padding-box,linear-gradient(white,white)] before:[mask-composite:exclude] before:[mask-position:0_0,0_100%] before:[mask-size:100%_calc(100%-2px),calc(100%-2px)_100%] before:[mask-repeat:no-repeat]">
         <CardHeader className="flex-row items-start justify-between">
-            <div>
+            <div className="flex-1">
                 <CardTitle className="font-headline text-2xl tracking-wide leading-tight group">
                     <Link href={`/events/${event.id}`} className="hover:underline">
                         {event.name}
@@ -73,7 +73,7 @@ export function EventCard({ event }: EventCardProps) {
             </div>
             <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
                             <MoreVertical className="h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
