@@ -191,18 +191,18 @@ export function ReportView({ event }: { event: Event }) {
   };
   
   const monetaryDonations = event.donations?.filter(d => d.donationType === 'Cash' || d.donationType === 'Bank') || [];
-  const totalDonationAmount = monetaryDonations.reduce((sum, d) => sum + (d.amount || 0), 0);
-  const totalIncome = event.incomes.reduce((sum, income) => sum + income.amount, 0) + totalDonationAmount;
-  const totalExpenses = event.expenses.reduce((sum, expense) => sum + expense.amount, 0);
-  const netProfit = totalIncome - totalExpenses;
   
   const cashIncomes = event.incomes.filter(i => i.transactionType === 'Cash').reduce((acc, i) => acc + i.amount, 0) + monetaryDonations.filter(d => d.donationType === 'Cash').reduce((acc, d) => acc + (d.amount || 0), 0);
   const bankIncomes = event.incomes.filter(i => i.transactionType === 'Bank').reduce((acc, i) => acc + i.amount, 0) + monetaryDonations.filter(d => d.donationType === 'Bank').reduce((acc, d) => acc + (d.amount || 0), 0);
+  const totalIncome = cashIncomes + bankIncomes;
 
   const cashExpenses = event.expenses.filter(e => e.transactionType === 'Cash').reduce((acc, e) => acc + e.amount, 0);
   const bankExpenses = event.expenses.filter(e => e.transactionType === 'Bank').reduce((acc, e) => acc + e.amount, 0);
+  const totalExpenses = cashExpenses + bankExpenses;
+
   const cashBalance = cashIncomes - cashExpenses;
   const bankBalance = bankIncomes - bankExpenses;
+  const netProfit = totalIncome - totalExpenses;
 
   const chartData = event.incomes.map(income => ({
     source: income.source,

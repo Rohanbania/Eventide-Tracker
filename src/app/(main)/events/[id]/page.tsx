@@ -116,7 +116,7 @@ export default function EventDetailPage() {
       </div>
 
       <Tabs defaultValue={defaultTab} className="w-full">
-        <TabsList className="w-full overflow-x-auto justify-start md:w-auto md:grid md:grid-cols-4 mb-6">
+        <TabsList className="w-full md:w-auto grid grid-cols-2 md:inline-flex md:grid-cols-4 mb-6">
           {features.expenses && <TabsTrigger value="expenses"><NotebookText className="w-4 h-4 mr-2" /> Expenses</TabsTrigger>}
           {features.income && <TabsTrigger value="income"><IndianRupee className="w-4 h-4 mr-2" /> Income</TabsTrigger>}
           {features.donations && <TabsTrigger value="donations"><Gift className="w-4 h-4 mr-2" /> Donations</TabsTrigger>}

@@ -16,7 +16,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
-import { Calendar as CalendarIcon } from "lucide-react"
+import { Calendar as CalendarIcon, IndianRupee } from "lucide-react"
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 
 const formSchema = z.object({
@@ -76,7 +76,7 @@ export function AddExpenseDialog({ event, expenseToEdit, children }: AddExpenseD
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-headline">{isEditMode ? 'Edit' : 'Add'} Expense for {event.name}</DialogTitle>
+          <DialogTitle className="font-headline flex items-center gap-2"><IndianRupee /> {isEditMode ? 'Edit' : 'Add'} Expense for {event.name}</DialogTitle>
           <DialogDescription>Quickly {isEditMode ? 'update' : 'add'} an expense for this event.</DialogDescription>
         </DialogHeader>
         <Form {...form}>
