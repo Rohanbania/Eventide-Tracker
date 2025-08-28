@@ -105,14 +105,16 @@ export default function SharedEventPage() {
         </div>
 
         <Tabs defaultValue={defaultTab} className="w-full">
-            <TabsList className="w-full md:w-auto grid grid-cols-2 md:inline-flex md:grid-cols-4 mb-6">
-                {features.expenses && <TabsTrigger value="expenses"><NotebookText className="w-4 h-4 mr-2" /> Expenses</TabsTrigger>}
-                {features.income && <TabsTrigger value="income"><IndianRupee className="w-4 h-4 mr-2" /> Income</TabsTrigger>}
-                {features.donations && <TabsTrigger value="donations"><Gift className="w-4 h-4 mr-2" /> Donations</TabsTrigger>}
-                <TabsTrigger value="reports">
-                    <BarChart2 className="w-4 h-4 mr-2" /> Reports
-                </TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto pb-2 mb-4">
+                <TabsList className="inline-flex">
+                    {features.expenses && <TabsTrigger value="expenses"><NotebookText className="w-4 h-4 mr-2" /> Expenses</TabsTrigger>}
+                    {features.income && <TabsTrigger value="income"><IndianRupee className="w-4 h-4 mr-2" /> Income</TabsTrigger>}
+                    {features.donations && <TabsTrigger value="donations"><Gift className="w-4 h-4 mr-2" /> Donations</TabsTrigger>}
+                    <TabsTrigger value="reports">
+                        <BarChart2 className="w-4 h-4 mr-2" /> Reports
+                    </TabsTrigger>
+                </TabsList>
+            </div>
             
             {features.expenses && <TabsContent value="expenses"><ExpenseTracker event={event} /></TabsContent>}
             {features.income && <TabsContent value="income"><IncomeTracker event={event} /></TabsContent>}
