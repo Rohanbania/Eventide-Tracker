@@ -20,9 +20,9 @@ export function Header() {
   const { user, signOut } = useAuth();
 
   return (
-    <header className="py-2 px-6 border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+    <header className="py-1 px-6 border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
       <div className="container mx-auto flex justify-between items-center">
-        <Link href="/" className="flex items-center gap-2 text-xl font-headline group w-fit">
+        <Link href="/" className="flex items-center gap-2 text-lg font-headline group w-fit">
           <Sparkles className="w-5 h-5 text-primary group-hover:text-accent transition-colors" />
           <span className="bg-gradient-to-r from-primary-foreground to-muted-foreground bg-clip-text text-transparent">
             Eventide Tracker
