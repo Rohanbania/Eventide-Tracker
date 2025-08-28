@@ -6,7 +6,7 @@ import type { Event } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from '@/components/ui/table';
-import { Gift, MoreVertical, Pencil, Trash2, IndianRupee } from 'lucide-react';
+import { Gift, MoreVertical, Pencil, PlusCircle, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from './ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
@@ -37,7 +37,7 @@ export function DonationTracker({ event }: { event: Event }) {
           </CardHeader>
           <CardContent>
             <AddDonationDialog event={event}>
-                <Button className="w-full">Add New Donation</Button>
+                <Button variant="outline" className="w-full"><PlusCircle/> Add New Donation</Button>
             </AddDonationDialog>
           </CardContent>
         </Card>
@@ -62,9 +62,9 @@ export function DonationTracker({ event }: { event: Event }) {
               <TableBody>
                 {donations.map((donation) => (
                   <TableRow key={donation.id} className="animate-in fade-in-0">
-                    <TableCell className="font-medium max-w-[150px] truncate">
+                    <TableCell className="font-medium max-w-[200px] sm:max-w-[150px] truncate">
                         <div className="flex flex-col">
-                            <span>{donation.source || '-'}</span>
+                            <span className="truncate">{donation.source || '-'}</span>
                             <div className="sm:hidden text-xs text-muted-foreground space-x-2 mt-1">
                                 <Badge variant={donation.donationType === 'Goods' ? 'default' : donation.donationType === 'Bank' ? 'secondary' : 'outline'}>
                                     {donation.donationType}

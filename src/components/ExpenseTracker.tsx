@@ -6,7 +6,7 @@ import type { Event } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption, TableFooter } from '@/components/ui/table';
-import { IndianRupee, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { IndianRupee, MoreVertical, Pencil, PlusCircle, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from './ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
@@ -38,7 +38,7 @@ export function ExpenseTracker({ event }: { event: Event }) {
           </CardHeader>
           <CardContent>
             <AddExpenseDialog event={event}>
-                <Button className="w-full">Add New Expense</Button>
+                <Button variant="outline" className="w-full"><PlusCircle/> Add New Expense</Button>
             </AddExpenseDialog>
           </CardContent>
         </Card>
@@ -63,9 +63,9 @@ export function ExpenseTracker({ event }: { event: Event }) {
               <TableBody>
                 {event.expenses.map((expense) => (
                   <TableRow key={expense.id} className="animate-in fade-in-0">
-                    <TableCell className="font-medium max-w-[150px] truncate">
+                    <TableCell className="font-medium max-w-[200px] sm:max-w-[150px] truncate">
                       <div className="flex flex-col">
-                          <span>{expense.notes || '-'}</span>
+                          <span className="truncate">{expense.notes || '-'}</span>
                           <div className="sm:hidden text-xs text-muted-foreground space-x-2 mt-1">
                             <Badge variant={expense.transactionType === 'Bank' ? 'secondary' : 'outline'}>
                               {expense.transactionType}

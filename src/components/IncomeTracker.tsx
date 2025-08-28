@@ -6,7 +6,7 @@ import type { Event } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption, TableFooter } from '@/components/ui/table';
-import { IndianRupee, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { IndianRupee, MoreVertical, Pencil, PlusCircle, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from './ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
@@ -39,7 +39,7 @@ export function IncomeTracker({ event }: { event: Event }) {
           </CardHeader>
           <CardContent>
             <AddIncomeDialog event={event}>
-                <Button className="w-full">Add New Income</Button>
+                <Button variant="outline" className="w-full"><PlusCircle /> Add New Income</Button>
             </AddIncomeDialog>
           </CardContent>
         </Card>
@@ -64,9 +64,9 @@ export function IncomeTracker({ event }: { event: Event }) {
               <TableBody>
                 {event.incomes.map((income) => (
                   <TableRow key={income.id} className="animate-in fade-in-0">
-                    <TableCell className="font-medium max-w-[150px] truncate">
+                    <TableCell className="font-medium max-w-[200px] sm:max-w-[150px] truncate">
                         <div className="flex flex-col">
-                            <span>{income.source}</span>
+                            <span className="truncate">{income.source}</span>
                             <div className="sm:hidden text-xs text-muted-foreground space-x-2 mt-1">
                                 <Badge variant={income.transactionType === 'Bank' ? 'secondary' : 'outline'}>
                                     {income.transactionType}
@@ -81,7 +81,7 @@ export function IncomeTracker({ event }: { event: Event }) {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground whitespace-nowrap hidden md:table-cell">{format(new Date(income.createdAt), 'MMM d, yyyy')}</TableCell>
-                    <TableCell className="text-right font-mono whitespace-nowrap">₹{income.amount.toFixed(2)}</TableCell>
+                    <TableCell className="text-right font-mono whitespace-nowrap text-green-600">₹{income.amount.toFixed(2)}</TableCell>
                      <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -124,7 +124,7 @@ export function IncomeTracker({ event }: { event: Event }) {
                   <TableFooter>
                       <TableRow>
                           <TableCell colSpan={3} className="font-bold text-base md:text-lg">Total Income</TableCell>
-                          <TableCell className="text-right font-bold font-mono text-base md:text-lg whitespace-nowrap">₹{totalIncome.toFixed(2)}</TableCell>
+                          <TableCell className="text-right font-bold font-mono text-base md:text-lg whitespace-nowrap text-green-600">₹{totalIncome.toFixed(2)}</TableCell>
                           <TableCell></TableCell>
                       </TableRow>
                   </TableFooter>
