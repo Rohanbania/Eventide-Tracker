@@ -28,6 +28,12 @@ export interface Donation {
   goods?: string; // For Goods
 }
 
+export interface EventFeatures {
+  expenses: boolean;
+  income: boolean;
+  donations: boolean;
+}
+
 
 export interface Event {
   id: string;
@@ -35,6 +41,7 @@ export interface Event {
   name: string;
   date: string;
   description?: string;
+  features: EventFeatures;
   expenses: Expense[];
   incomes: Income[];
   donations: Donation[];

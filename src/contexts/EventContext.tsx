@@ -3,19 +3,26 @@
 
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import { collection, addDoc, query, where, onSnapshot, doc, updateDoc, orderBy, deleteDoc } from 'firebase/firestore';
-import type { Event, Expense, Income, TransactionType, Donation } from '@/lib/types';
+import type { Event, Expense, Income, TransactionType, Donation, EventFeatures } from '@/lib/types';
 import { summarizeExpense } from '@/ai/flows/summarize-expense';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './AuthContext';
 import { db } from '@/lib/firebase';
 import { Timestamp } from 'firebase/firestore';
 
+interface EventData {
+    name: string;
+    date: string;
+    description?: string;
+    features: EventFeatures;
+}
+
 interface EventContextType {
   events: Event[];
   loading: boolean;
   getEventById: (id: string) => Event | undefined;
-  addEvent: (name: string, date: string, description?: string) => Promise<void>;
-  updateEvent: (eventId: string, name: string, date: string, description?: string) => Promise<void>;
+  addEvent: (data: EventData) => Promise<void>;
+  updateEvent: (eventId: string, data: EventData) => Promise<void>;
   deleteEvent: (eventId: string) => Promise<void>;
   addExpense: (eventId: string, notes: string, amount: number, createdAt: string, transactionType: TransactionType) => Promise<void>;
   updateExpense: (eventId: string, expense: Expense) => Promise<void>;
@@ -49,6 +56,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
               id: doc.id, 
               ...data,
               donations: data.donations || [], // Ensure donations array exists
+              features: data.features || { expenses: true, income: true, donations: true }, // Ensure features exists
           } as Event);
         });
         setEvents(userEvents);
@@ -70,14 +78,12 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     return events.find(event => event.id === id);
   }, [events]);
 
-  const addEvent = async (name: string, date: string, description?: string) => {
+  const addEvent = async (data: EventData) => {
     if (!user) return;
     try {
       await addDoc(collection(db, "events"), {
         userId: user.uid,
-        name,
-        date,
-        description,
+        ...data,
         expenses: [],
         incomes: [],
         donations: [],
@@ -85,7 +91,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       });
       toast({
         title: "Event Created!",
-        description: `"${name}" has been added to your list.`,
+        description: `"${data.name}" has been added to your list.`,
       });
     } catch (error) {
       console.error("Error creating event:", error);
@@ -93,10 +99,10 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const updateEvent = async (eventId: string, name: string, date: string, description?: string) => {
+  const updateEvent = async (eventId: string, data: EventData) => {
     try {
       const eventRef = doc(db, "events", eventId);
-      await updateDoc(eventRef, { name, date, description });
+      await updateDoc(eventRef, { ...data });
       toast({
         title: "Event Updated",
         description: "Your event details have been saved.",

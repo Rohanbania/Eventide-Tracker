@@ -58,6 +58,10 @@ export default function EventDetailPage() {
        </div>
     )
   }
+  
+  const features = event.features || { expenses: true, income: true, donations: true };
+  const defaultTab = features.expenses ? "expenses" : features.income ? "income" : features.donations ? "donations" : "reports";
+
 
   return (
     <div className="container mx-auto px-4 py-8 animate-in fade-in-0">
@@ -103,30 +107,20 @@ export default function EventDetailPage() {
         )}
       </div>
 
-      <Tabs defaultValue="expenses" className="w-full">
+      <Tabs defaultValue={defaultTab} className="w-full">
         <TabsList className="w-full overflow-x-auto justify-start md:w-auto md:grid md:grid-cols-4 mb-6">
-          <TabsTrigger value="expenses">
-            <NotebookText className="w-4 h-4 mr-2" /> Expenses
-          </TabsTrigger>
-          <TabsTrigger value="income">
-            <DollarSign className="w-4 h-4 mr-2" /> Income
-          </TabsTrigger>
-          <TabsTrigger value="donations">
-            <Gift className="w-4 h-4 mr-2" /> Donations
-          </TabsTrigger>
+          {features.expenses && <TabsTrigger value="expenses"><NotebookText className="w-4 h-4 mr-2" /> Expenses</TabsTrigger>}
+          {features.income && <TabsTrigger value="income"><DollarSign className="w-4 h-4 mr-2" /> Income</TabsTrigger>}
+          {features.donations && <TabsTrigger value="donations"><Gift className="w-4 h-4 mr-2" /> Donations</TabsTrigger>}
           <TabsTrigger value="reports">
             <BarChart2 className="w-4 h-4 mr-2" /> Reports
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="expenses">
-          <ExpenseTracker event={event} />
-        </TabsContent>
-        <TabsContent value="income">
-          <IncomeTracker event={event} />
-        </TabsContent>
-        <TabsContent value="donations">
-          <DonationTracker event={event} />
-        </TabsContent>
+        
+        {features.expenses && <TabsContent value="expenses"><ExpenseTracker event={event} /></TabsContent>}
+        {features.income && <TabsContent value="income"><IncomeTracker event={event} /></TabsContent>}
+        {features.donations && <TabsContent value="donations"><DonationTracker event={event} /></TabsContent>}
+
         <TabsContent value="reports">
           <ReportView event={event} />
         </TabsContent>

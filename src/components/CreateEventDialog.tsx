@@ -17,6 +17,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -28,6 +29,7 @@ import { useEvents } from '@/contexts/EventContext';
 import { useEffect, useState } from 'react';
 import { Textarea } from './ui/textarea';
 import type { Event } from '@/lib/types';
+import { Checkbox } from './ui/checkbox';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -37,12 +39,24 @@ const formSchema = z.object({
     message: 'Please enter a valid date.',
   }),
   description: z.string().optional(),
+  features: z.object({
+    expenses: z.boolean().default(true),
+    income: z.boolean().default(true),
+    donations: z.boolean().default(false),
+  })
 });
 
 interface CreateEventDialogProps {
     eventToEdit?: Event;
     children?: React.ReactNode;
 }
+
+const featureItems = [
+    { id: 'expenses', label: 'Track Expenses' },
+    { id: 'income', label: 'Track Income' },
+    { id: 'donations', label: 'Track Donations' },
+] as const;
+
 
 export function CreateEventDialog({ eventToEdit, children }: CreateEventDialogProps) {
   const [open, setOpen] = useState(false);
@@ -55,31 +69,44 @@ export function CreateEventDialog({ eventToEdit, children }: CreateEventDialogPr
       name: '',
       date: new Date().toISOString().split('T')[0],
       description: '',
+      features: {
+        expenses: true,
+        income: true,
+        donations: true,
+      }
     },
   });
 
   useEffect(() => {
-    if (isEditMode && eventToEdit) {
-      form.reset({
-        name: eventToEdit.name,
-        date: eventToEdit.date.split('T')[0],
-        description: eventToEdit.description || '',
-      });
-    } else {
+    if (open) {
+      if (isEditMode && eventToEdit) {
         form.reset({
-            name: '',
-            date: new Date().toISOString().split('T')[0],
-            description: '',
+          name: eventToEdit.name,
+          date: eventToEdit.date.split('T')[0],
+          description: eventToEdit.description || '',
+          features: eventToEdit.features || { expenses: true, income: true, donations: true },
         });
+      } else {
+          form.reset({
+              name: '',
+              date: new Date().toISOString().split('T')[0],
+              description: '',
+              features: {
+                expenses: true,
+                income: true,
+                donations: true,
+              }
+          });
+      }
     }
   }, [eventToEdit, isEditMode, form, open]);
 
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     if (isEditMode && eventToEdit) {
-      updateEvent(eventToEdit.id, values.name, values.date, values.description);
+      updateEvent(eventToEdit.id, values);
     } else {
-      addEvent(values.name, values.date, values.description);
+      addEvent(values);
     }
     setOpen(false);
   }
@@ -141,6 +168,34 @@ export function CreateEventDialog({ eventToEdit, children }: CreateEventDialogPr
                 </FormItem>
               )}
             />
+
+            <FormItem>
+                <div className="mb-4">
+                    <FormLabel className="text-base">Event Features</FormLabel>
+                    <FormDescription>
+                        Select the modules you want to enable for this event.
+                    </FormDescription>
+                </div>
+                {featureItems.map((item) => (
+                <FormField
+                    key={item.id}
+                    control={form.control}
+                    name={`features.${item.id}`}
+                    render={({ field }) => (
+                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 p-2 rounded-md hover:bg-muted">
+                        <FormControl>
+                        <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                        />
+                        </FormControl>
+                        <FormLabel className="font-normal">{item.label}</FormLabel>
+                    </FormItem>
+                    )}
+                />
+                ))}
+            </FormItem>
+
             <DialogFooter>
               <Button type="submit">{isEditMode ? 'Save Changes' : 'Create Event'}</Button>
             </DialogFooter>
