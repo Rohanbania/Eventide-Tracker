@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -19,10 +20,10 @@ export function Header() {
   const { user, signOut } = useAuth();
 
   return (
-    <header className="py-4 px-6 border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+    <header className="py-2 px-6 border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
       <div className="container mx-auto flex justify-between items-center">
-        <Link href="/" className="flex items-center gap-3 text-2xl font-headline group w-fit">
-          <Sparkles className="w-6 h-6 text-primary group-hover:text-accent transition-colors" />
+        <Link href="/" className="flex items-center gap-2 text-xl font-headline group w-fit">
+          <Sparkles className="w-5 h-5 text-primary group-hover:text-accent transition-colors" />
           <span className="bg-gradient-to-r from-primary-foreground to-muted-foreground bg-clip-text text-transparent">
             Eventide Tracker
           </span>
@@ -33,7 +34,7 @@ export function Header() {
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                    <Avatar className="h-9 w-9">
+                    <Avatar className="h-8 w-8">
                     <AvatarImage src={user.photoURL || ''} alt={user.displayName || 'User'} />
                     <AvatarFallback>{user.displayName?.charAt(0)}</AvatarFallback>
                     </Avatar>
