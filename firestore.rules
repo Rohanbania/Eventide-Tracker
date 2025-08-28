@@ -2,18 +2,46 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Only authenticated users can access the database
     match /events/{eventId} {
-      allow read: if request.auth != null && 
-        (resource.data.userId == request.auth.uid || request.auth.token.email in resource.data.collaborators);
+    
+      function isOwner() {
+        return request.auth.uid == resource.data.userId;
+      }
       
+      function isCollaborator() {
+        return request.auth.token.email in resource.data.collaborators;
+      }
+
+      function isPendingCollaborator() {
+        return request.auth.token.email in resource.data.pendingCollaborators;
+      }
+
+      // Allow read if user is owner or collaborator
+      allow read: if isOwner() || isCollaborator();
+      
+      // Allow create for any authenticated user
       allow create: if request.auth != null;
 
-      // Allow update if user is the owner, a collaborator, or a pending collaborator
-      allow update: if request.auth != null &&
-        (resource.data.userId == request.auth.uid || request.auth.token.email in resource.data.collaborators || request.auth.token.email in resource.data.pendingCollaborators);
-        
-      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      // Allow owner to delete
+      allow delete: if isOwner();
+
+      // Granular update rules
+      allow update: if 
+        // Owner can update everything
+        isOwner() ||
+        // A collaborator can update fields, but not the collaborators lists
+        (isCollaborator() && !(request.resource.data.diff(resource.data).affectedKeys.hasAny(['collaborators', 'pendingCollaborators', 'userId']))) ||
+        // A pending user can accept or decline their own invitation
+        (isPendingCollaborator() && 
+         (
+           // Accepting: adding self to collaborators and removing from pending
+           (request.resource.data.collaborators == resource.data.collaborators.concat([request.auth.token.email]) &&
+            request.resource.data.pendingCollaborators == resource.data.pendingCollaborators.removeAll([request.auth.token.email])) ||
+           // Declining: removing self from pending
+           (request.resource.data.pendingCollaborators == resource.data.pendingCollaborators.removeAll([request.auth.token.email]) &&
+            request.resource.data.collaborators == resource.data.collaborators)
+         )
+        );
     }
   }
 }
