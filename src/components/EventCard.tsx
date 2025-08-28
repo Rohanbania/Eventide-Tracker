@@ -1,7 +1,7 @@
 
 import Link from 'next/link';
 import { format, parseISO } from 'date-fns';
-import { ArrowRight, Calendar, IndianRupee, Wallet, MoreVertical, Pencil, Trash2, Landmark, Coins } from 'lucide-react';
+import { ArrowRight, Calendar, IndianRupee, Wallet, MoreVertical, Pencil, Trash2, Landmark, Coins, Gift } from 'lucide-react';
 import type { Event } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useEvents } from '@/contexts/EventContext';
 import { toast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
+import { AddDonationDialog } from './AddDonationDialog';
 
 interface EventCardProps {
   event: Event;
@@ -154,13 +155,19 @@ export function EventCard({ event }: EventCardProps) {
                     <ArrowRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
                 </Button>
             </Link>
-            <div className="flex gap-2 pt-2 border-t">
+            <div className="grid grid-cols-3 gap-2 pt-2 border-t">
                 <AddExpenseDialog event={event}>
-                    <Button variant="outline" size="sm" className="w-full">Add Expense</Button>
+                    <Button variant="outline" size="sm" className="w-full">Expense</Button>
                 </AddExpenseDialog>
                 <AddIncomeDialog event={event}>
-                    <Button variant="outline" size="sm" className="w-full">Add Income</Button>
+                    <Button variant="outline" size="sm" className="w-full">Income</Button>
                 </AddIncomeDialog>
+                <AddDonationDialog event={event}>
+                    <Button variant="outline" size="sm" className="w-full">
+                        <Gift className="mr-1 h-4 w-4" />
+                        Donation
+                    </Button>
+                </AddDonationDialog>
             </div>
         </CardFooter>
         </Card>

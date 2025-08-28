@@ -7,7 +7,7 @@ import { ExpenseTracker } from '@/components/ExpenseTracker';
 import { IncomeTracker } from '@/components/IncomeTracker';
 import { ReportView } from '@/components/ReportView';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, NotebookText, DollarSign, BarChart2, Sparkles, Pencil, Trash2 } from 'lucide-react';
+import { Calendar, NotebookText, DollarSign, BarChart2, Sparkles, Pencil, Trash2, Gift } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ import { useEffect } from 'react';
 import { CreateEventDialog } from '@/components/CreateEventDialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { toast } from '@/hooks/use-toast';
+import { DonationTracker } from '@/components/DonationTracker';
 
 export default function EventDetailPage() {
   const params = useParams();
@@ -103,12 +104,15 @@ export default function EventDetailPage() {
       </div>
 
       <Tabs defaultValue="expenses" className="w-full">
-        <TabsList className="w-full overflow-x-auto justify-start md:w-fit md:grid md:grid-cols-3 mb-6">
+        <TabsList className="w-full overflow-x-auto justify-start md:w-auto md:grid md:grid-cols-4 mb-6">
           <TabsTrigger value="expenses">
             <NotebookText className="w-4 h-4 mr-2" /> Expenses
           </TabsTrigger>
           <TabsTrigger value="income">
             <DollarSign className="w-4 h-4 mr-2" /> Income
+          </TabsTrigger>
+          <TabsTrigger value="donations">
+            <Gift className="w-4 h-4 mr-2" /> Donations
           </TabsTrigger>
           <TabsTrigger value="reports">
             <BarChart2 className="w-4 h-4 mr-2" /> Reports
@@ -119,6 +123,9 @@ export default function EventDetailPage() {
         </TabsContent>
         <TabsContent value="income">
           <IncomeTracker event={event} />
+        </TabsContent>
+        <TabsContent value="donations">
+          <DonationTracker event={event} />
         </TabsContent>
         <TabsContent value="reports">
           <ReportView event={event} />

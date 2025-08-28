@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import { collection, addDoc, query, where, onSnapshot, doc, updateDoc, orderBy, deleteDoc } from 'firebase/firestore';
-import type { Event, Expense, Income, TransactionType } from '@/lib/types';
+import type { Event, Expense, Income, TransactionType, Donation } from '@/lib/types';
 import { summarizeExpense } from '@/ai/flows/summarize-expense';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './AuthContext';
@@ -23,6 +23,9 @@ interface EventContextType {
   addIncome: (eventId: string, source: string, amount: number, createdAt: string, transactionType: TransactionType) => Promise<void>;
   updateIncome: (eventId: string, income: Income) => Promise<void>;
   deleteIncome: (eventId: string, incomeId: string) => Promise<void>;
+  addDonation: (eventId: string, donation: Omit<Donation, 'id'>) => Promise<void>;
+  updateDonation: (eventId: string, donation: Donation) => Promise<void>;
+  deleteDonation: (eventId: string, donationId: string) => Promise<void>;
   generateExpenseSummary: (eventId: string) => Promise<void>;
 }
 
@@ -41,7 +44,12 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const userEvents: Event[] = [];
         querySnapshot.forEach((doc) => {
-          userEvents.push({ id: doc.id, ...doc.data() } as Event);
+          const data = doc.data();
+          userEvents.push({ 
+              id: doc.id, 
+              ...data,
+              donations: data.donations || [], // Ensure donations array exists
+          } as Event);
         });
         setEvents(userEvents);
         setLoading(false);
@@ -72,6 +80,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
         description,
         expenses: [],
         incomes: [],
+        donations: [],
         createdAt: Timestamp.now(),
       });
       toast({
@@ -225,6 +234,64 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const addDonation = async (eventId: string, donationData: Omit<Donation, 'id'>) => {
+    const event = getEventById(eventId);
+    if (!event) return;
+
+    const newDonation: Donation = {
+        id: doc(collection(db, "dummy")).id,
+        ...donationData,
+    };
+
+    try {
+        const eventRef = doc(db, "events", eventId);
+        const currentDonations = event.donations || [];
+        await updateDoc(eventRef, {
+            donations: [newDonation, ...currentDonations]
+        });
+        toast({ title: "Donation Added", description: "Your donation has been recorded." });
+    } catch (error) {
+        console.error("Error adding donation:", error);
+        toast({ variant: 'destructive', title: "Error", description: "Could not add donation." });
+    }
+};
+
+const updateDonation = async (eventId: string, updatedDonation: Donation) => {
+    const event = getEventById(eventId);
+    if (!event) return;
+
+    const updatedDonations = (event.donations || []).map(donation =>
+        donation.id === updatedDonation.id ? updatedDonation : donation
+    );
+
+    try {
+        const eventRef = doc(db, "events", eventId);
+        await updateDoc(eventRef, { donations: updatedDonations });
+        toast({ title: "Donation Updated", description: "The donation has been successfully updated." });
+    } catch (error) {
+        console.error("Error updating donation:", error);
+        toast({ variant: 'destructive', title: "Error", description: "Could not update the donation." });
+    }
+};
+
+const deleteDonation = async (eventId: string, donationId: string) => {
+    const event = getEventById(eventId);
+    if (!event) return;
+
+    const updatedDonations = (event.donations || []).filter(donation => donation.id !== donationId);
+
+    try {
+        const eventRef = doc(db, "events", eventId);
+        await updateDoc(eventRef, { donations: updatedDonations });
+        toast({ title: "Donation Deleted", description: "The donation has been removed." });
+    } catch (error) {
+        console.error("Error deleting donation:", error);
+        toast({ variant: 'destructive', title: "Error", description: "Could not delete the donation." });
+        throw error;
+    }
+};
+
+
   const generateExpenseSummary = async (eventId: string) => {
     const event = getEventById(eventId);
     if (!event || event.expenses.length === 0) {
@@ -275,6 +342,9 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     addIncome,
     updateIncome,
     deleteIncome,
+    addDonation,
+    updateDonation,
+    deleteDonation,
     generateExpenseSummary,
   };
 
