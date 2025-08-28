@@ -203,7 +203,6 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       const eventRef = doc(db, "events", eventId);
       await updateDoc(eventRef, {
         collaborators: arrayUnion(userEmail),
-        pendingCollaborators: arrayRemove(userEmail)
       });
        toast({
         title: "Invitation Accepted",
@@ -456,3 +455,5 @@ export const useEvents = () => {
   }
   return context;
 };
+
+    

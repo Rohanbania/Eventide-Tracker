@@ -1,9 +1,9 @@
-rules_version = '2';
 
+rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /events/{eventId} {
-    
+      
       function isOwner() {
         return request.auth.uid == resource.data.userId;
       }
@@ -12,36 +12,32 @@ service cloud.firestore {
         return request.auth.token.email in resource.data.collaborators;
       }
 
-      function isPendingCollaborator() {
+      function isInvited() {
         return request.auth.token.email in resource.data.pendingCollaborators;
       }
 
-      // Allow read if user is owner or collaborator
-      allow read: if isOwner() || isCollaborator();
+      function isAccepting() {
+        // Allow if user is adding themselves to collaborators
+        return request.resource.data.collaborators == resource.data.collaborators.concat([request.auth.token.email]);
+      }
       
-      // Allow create for any authenticated user
+      function isDeclining() {
+        // Allow if user is removing themselves from pending
+        return request.resource.data.pendingCollaborators == resource.data.pendingCollaborators.diff([request.auth.token.email]);
+      }
+
+      allow read: if request.auth != null && (isOwner() || isCollaborator() || isInvited());
+
       allow create: if request.auth != null;
 
-      // Allow owner to delete
-      allow delete: if isOwner();
+      allow delete: if request.auth != null && isOwner();
 
-      // Granular update rules
-      allow update: if 
-        // Owner can update everything
-        isOwner() ||
-        // A collaborator can update fields, but not the collaborators lists
-        (isCollaborator() && !(request.resource.data.diff(resource.data).affectedKeys.hasAny(['collaborators', 'pendingCollaborators', 'userId']))) ||
-        // A pending user can accept or decline their own invitation
-        (isPendingCollaborator() && 
-         (
-           // Accepting: adding self to collaborators and removing from pending
-           (request.resource.data.collaborators == resource.data.collaborators.concat([request.auth.token.email]) &&
-            request.resource.data.pendingCollaborators == resource.data.pendingCollaborators.removeAll([request.auth.token.email])) ||
-           // Declining: removing self from pending
-           (request.resource.data.pendingCollaborators == resource.data.pendingCollaborators.removeAll([request.auth.token.email]) &&
-            request.resource.data.collaborators == resource.data.collaborators)
-         )
-        );
+      allow update: if request.auth != null && (
+        isOwner() || 
+        (isInvited() && (isAccepting() || isDeclining()))
+      );
     }
   }
 }
+
+    
