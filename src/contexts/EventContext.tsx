@@ -21,7 +21,7 @@ interface EventContextType {
   loading: boolean;
   getEventById: (id: string) => Event | undefined;
   addEvent: (data: EventData) => Promise<void>;
-  updateEvent: (eventId: string, data: EventData) => Promise<void>;
+  updateEvent: (eventId: string, data: Partial<EventData>) => Promise<void>;
   deleteEvent: (eventId: string) => Promise<void>;
   addExpense: (eventId: string, notes: string, amount: number, createdAt: string, transactionType: TransactionType) => Promise<void>;
   updateExpense: (eventId: string, expense: Expense) => Promise<void>;
@@ -92,7 +92,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const updateEvent = async (eventId: string, data: EventData) => {
+  const updateEvent = async (eventId: string, data: Partial<EventData>) => {
     try {
       const eventRef = doc(db, "events", eventId);
       await updateDoc(eventRef, { ...data });

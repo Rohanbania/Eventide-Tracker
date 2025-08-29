@@ -159,7 +159,7 @@ export function EventCard({ event }: EventCardProps) {
           </Link>
           <div className={cn(
               "grid gap-2 pt-2 border-t",
-              `grid-cols-${enabledFeaturesCount}`
+              enabledFeaturesCount > 0 && `grid-cols-${enabledFeaturesCount}`
           )}>
               {features.expenses && <AddExpenseDialog event={event}><Button variant="outline" size="sm" className="w-full">Expense</Button></AddExpenseDialog>}
               {features.income && <AddIncomeDialog event={event}><Button variant="outline" size="sm" className="w-full">Income</Button></AddIncomeDialog>}
