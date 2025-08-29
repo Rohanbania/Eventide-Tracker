@@ -285,6 +285,13 @@ export function ReportView({ event }: { event: Event }) {
     expense: item.amount,
   }));
 
+  const getChartWidth = (dataLength: number) => {
+    const minWidth = 800; // Minimum width of the chart
+    const widthPerBar = 80; // Pixels per bar
+    const calculatedWidth = dataLength * widthPerBar;
+    return Math.max(minWidth, calculatedWidth);
+  }
+
   return (
     <div className="space-y-8">
        <div className="flex justify-end gap-2">
@@ -364,7 +371,7 @@ export function ReportView({ event }: { event: Event }) {
             Financial Breakdown
           </CardTitle>
           <CardDescription>
-            Switch between income and expense visualizations.
+            Switch between income and expense visualizations. The chart is scrollable if there are many items.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -375,30 +382,31 @@ export function ReportView({ event }: { event: Event }) {
             </TabsList>
             <TabsContent value="income">
               {incomeChartData.length > 0 ? (
-                <ChartContainer config={chartConfig} className="min-h-[450px] w-full">
-                  <ResponsiveContainer>
-                    <BarChart
-                      accessibilityLayer
-                      data={incomeChartData}
-                      margin={{ top: 20, right: 20, left: -10, bottom: 80 }}
-                    >
-                      <CartesianGrid vertical={false} />
-                      <XAxis
-                        dataKey="name"
-                        tickLine={false}
-                        tickMargin={10}
-                        axisLine={false}
-                        interval={0}
-                        angle={-45}
-                        textAnchor="end"
-                        height={100}
-                      />
-                      <YAxis tickFormatter={(value) => `₹${value / 1000}k`} />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Bar dataKey="income" fill="var(--color-income)" radius={4} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
+                <div className="overflow-x-auto py-2">
+                   <ChartContainer config={chartConfig} style={{ minHeight: '450px', width: '100%', minWidth: `${getChartWidth(incomeChartData.length)}px` }}>
+                      <ResponsiveContainer>
+                        <BarChart
+                          accessibilityLayer
+                          data={incomeChartData}
+                          margin={{ top: 20, right: 20, left: -10, bottom: 80 }}
+                        >
+                          <CartesianGrid vertical={false} />
+                          <XAxis
+                            dataKey="name"
+                            tickLine={false}
+                            tickMargin={10}
+                            axisLine={false}
+                            interval={0}
+                            dy={10}
+                            style={{ fontSize: '12px' }}
+                          />
+                          <YAxis tickFormatter={(value) => `₹${value / 1000}k`} />
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          <Bar dataKey="income" fill="var(--color-income)" radius={4} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                   </ChartContainer>
+                </div>
               ) : (
                 <p className="text-muted-foreground text-center py-8">
                   No income data to display.
@@ -407,30 +415,31 @@ export function ReportView({ event }: { event: Event }) {
             </TabsContent>
             <TabsContent value="expense">
               {expenseChartData.length > 0 ? (
-                <ChartContainer config={chartConfig} className="min-h-[450px] w-full">
-                  <ResponsiveContainer>
-                    <BarChart
-                      accessibilityLayer
-                      data={expenseChartData}
-                      margin={{ top: 20, right: 20, left: -10, bottom: 80 }}
-                    >
-                      <CartesianGrid vertical={false} />
-                      <XAxis
-                        dataKey="name"
-                        tickLine={false}
-                        tickMargin={10}
-                        axisLine={false}
-                        interval={0}
-                        angle={-45}
-                        textAnchor="end"
-                        height={100}
-                      />
-                      <YAxis tickFormatter={(value) => `₹${value / 1000}k`} />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Bar dataKey="expense" fill="var(--color-expense)" radius={4} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
+                <div className="overflow-x-auto py-2">
+                    <ChartContainer config={chartConfig} style={{ minHeight: '450px', width: '100%', minWidth: `${getChartWidth(expenseChartData.length)}px` }}>
+                    <ResponsiveContainer>
+                      <BarChart
+                        accessibilityLayer
+                        data={expenseChartData}
+                        margin={{ top: 20, right: 20, left: -10, bottom: 80 }}
+                      >
+                        <CartesianGrid vertical={false} />
+                        <XAxis
+                          dataKey="name"
+                          tickLine={false}
+                          tickMargin={10}
+                          axisLine={false}
+                          interval={0}
+                          dy={10}
+                          style={{ fontSize: '12px' }}
+                        />
+                        <YAxis tickFormatter={(value) => `₹${value / 1000}k`} />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Bar dataKey="expense" fill="var(--color-expense)" radius={4} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                </div>
               ) : (
                 <p className="text-muted-foreground text-center py-8">
                   No expense data to display.
