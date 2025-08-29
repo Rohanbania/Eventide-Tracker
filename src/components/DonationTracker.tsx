@@ -57,7 +57,6 @@ export function DonationTracker({ event, isReadOnly = false }: { event: Event, i
               <TableHeader>
                 <TableRow>
                   <TableHead>Donor</TableHead>
-                  <TableHead>Author</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Details / Amount</TableHead>
                   <TableHead>Date</TableHead>
@@ -69,21 +68,6 @@ export function DonationTracker({ event, isReadOnly = false }: { event: Event, i
                   <TableRow key={donation.id} className="animate-in fade-in-0">
                     <TableCell className="font-medium max-w-[200px] truncate">
                         {donation.source || '-'}
-                    </TableCell>
-                    <TableCell>
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger>
-                                    <Avatar className="h-7 w-7">
-                                        <AvatarImage src={donation.author?.photoURL} alt={donation.author?.name} />
-                                        <AvatarFallback>{donation.author?.name?.charAt(0) || 'U'}</AvatarFallback>
-                                    </Avatar>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>{donation.author?.name || 'Unknown User'}</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
                     </TableCell>
                     <TableCell>
                         <Badge variant={donation.donationType === 'Goods' ? 'default' : donation.donationType === 'Bank' ? 'secondary' : 'outline'}>

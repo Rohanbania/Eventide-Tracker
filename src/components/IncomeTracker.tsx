@@ -59,7 +59,6 @@ export function IncomeTracker({ event, isReadOnly = false }: { event: Event, isR
               <TableHeader>
                 <TableRow>
                   <TableHead>Source</TableHead>
-                  <TableHead>Author</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
@@ -71,21 +70,6 @@ export function IncomeTracker({ event, isReadOnly = false }: { event: Event, isR
                   <TableRow key={income.id} className="animate-in fade-in-0">
                     <TableCell className="font-medium max-w-[200px] truncate">
                         {income.source}
-                    </TableCell>
-                    <TableCell>
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger>
-                                    <Avatar className="h-7 w-7">
-                                        <AvatarImage src={income.author?.photoURL} alt={income.author?.name} />
-                                        <AvatarFallback>{income.author?.name?.charAt(0) || 'U'}</AvatarFallback>
-                                    </Avatar>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>{income.author?.name || 'Unknown User'}</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
                     </TableCell>
                     <TableCell>
                       <Badge variant={income.transactionType === 'Bank' ? 'secondary' : 'outline'}>
@@ -137,7 +121,7 @@ export function IncomeTracker({ event, isReadOnly = false }: { event: Event, isR
                {event.incomes.length > 0 && (
                   <TableFooter>
                       <TableRow>
-                          <TableCell colSpan={isReadOnly ? 4: 5} className="font-bold text-base md:text-lg">Total Income</TableCell>
+                          <TableCell colSpan={isReadOnly ? 3: 4} className="font-bold text-base md:text-lg">Total Income</TableCell>
                           <TableCell className="text-right font-bold font-mono text-base md:text-lg whitespace-nowrap text-green-600">₹{totalIncome.toFixed(2)}</TableCell>
                           {!isReadOnly && <TableCell></TableCell>}
                       </TableRow>
