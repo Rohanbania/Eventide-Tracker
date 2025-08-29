@@ -7,9 +7,8 @@ import { ExpenseTracker } from '@/components/ExpenseTracker';
 import { IncomeTracker } from '@/components/IncomeTracker';
 import { ReportView } from '@/components/ReportView';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, NotebookText, BarChart2, Sparkles, Pencil, Trash2, Gift, MoreVertical, IndianRupee, Users } from 'lucide-react';
+import { Calendar, NotebookText, BarChart2, Sparkles, Pencil, Trash2, Gift, MoreVertical, IndianRupee } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useEffect } from 'react';
 import { CreateEventDialog } from '@/components/CreateEventDialog';
@@ -17,15 +16,10 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from '@/hooks/use-toast';
 import { DonationTracker } from '@/components/DonationTracker';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useAuth } from '@/contexts/AuthContext';
-import { InviteCollaboratorDialog } from '@/components/InviteCollaboratorDialog';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 export default function EventDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { user } = useAuth();
   const { getEventById, loading, deleteEvent } = useEvents();
   const eventId = typeof params.id === 'string' ? params.id : '';
   const event = getEventById(eventId);
@@ -55,8 +49,6 @@ export default function EventDetailPage() {
     }
   };
 
-  const isOwner = user?.uid === event?.userId;
-
   if (loading || !event) {
     return (
        <div className="container mx-auto text-center py-20">
@@ -71,7 +63,6 @@ export default function EventDetailPage() {
 
 
   return (
-    <TooltipProvider>
     <div className="container mx-auto px-4 py-8 animate-in fade-in-0">
       <div className="mb-8">
         <div className="flex items-start justify-between gap-4">
@@ -81,25 +72,8 @@ export default function EventDetailPage() {
                   <Calendar className="w-5 h-5" />
                   {format(parseISO(event.date), 'EEEE, MMMM d, yyyy')}
                 </p>
-                <div className="flex items-center gap-2 mt-4 text-sm text-muted-foreground">
-                    <Users className="w-4 h-4" />
-                    <span>Owned by {event.ownerName}</span>
-                    <div className="flex items-center -space-x-2">
-                        <Tooltip>
-                            <TooltipTrigger>
-                                <Avatar className="h-6 w-6 border-2 border-background">
-                                    <AvatarFallback>{event.ownerName?.charAt(0) || 'U'}</AvatarFallback>
-                                </Avatar>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>{event.ownerName}</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </div>
-                </div>
             </div>
             <div className="flex items-center gap-2">
-                <InviteCollaboratorDialog event={event} />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
@@ -112,30 +86,26 @@ export default function EventDetailPage() {
                               <Pencil className="mr-2 h-4 w-4" /> Edit Event
                           </DropdownMenuItem>
                       </CreateEventDialog>
-                      {isOwner && (
-                        <>
-                        <DropdownMenuSeparator />
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive" onSelect={(e) => e.preventDefault()}>
-                                    <Trash2 className="mr-2 h-4 w-4" /> Delete Event
-                                </DropdownMenuItem>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        This action cannot be undone. This will permanently delete {event.name} and all its data.
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={handleDeleteEvent} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                        </>
-                      )}
+                      <DropdownMenuSeparator />
+                      <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                              <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive" onSelect={(e) => e.preventDefault()}>
+                                  <Trash2 className="mr-2 h-4 w-4" /> Delete Event
+                              </DropdownMenuItem>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                              <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                      This action cannot be undone. This will permanently delete {event.name} and all its data.
+                                  </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={handleDeleteEvent} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                              </AlertDialogFooter>
+                          </AlertDialogContent>
+                      </AlertDialog>
                   </DropdownMenuContent>
                 </DropdownMenu>
             </div>
@@ -166,6 +136,5 @@ export default function EventDetailPage() {
         </TabsContent>
       </Tabs>
     </div>
-    </TooltipProvider>
   );
 }

@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
-      if (!user && pathname !== '/login' && !pathname.startsWith('/share/')) {
+      if (!user && pathname !== '/login') {
           router.push('/login');
       }
     });

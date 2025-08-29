@@ -18,7 +18,6 @@ interface EventData {
 
 interface EventContextType {
   events: Event[];
-  pendingInvitations: Event[];
   loading: boolean;
   getEventById: (id: string) => Event | undefined;
   addEvent: (data: EventData) => Promise<void>;
@@ -33,82 +32,38 @@ interface EventContextType {
   addDonation: (eventId: string, donation: Omit<Donation, 'id'>) => Promise<void>;
   updateDonation: (eventId: string, donation: Donation) => Promise<void>;
   deleteDonation: (eventId: string, donationId: string) => Promise<void>;
-  addCollaborator: (eventId: string, email: string) => Promise<void>;
-  removeCollaborator: (eventId: string, email: string) => Promise<void>;
-  acceptInvitation: (eventId: string, userEmail: string) => Promise<void>;
-  declineInvitation: (eventId: string, userEmail: string) => Promise<void>;
 }
 
 const EventContext = createContext<EventContextType | undefined>(undefined);
 
 export const EventProvider = ({ children }: { children: ReactNode }) => {
   const [events, setEvents] = useState<Event[]>([]);
-  const [pendingInvitations, setPendingInvitations] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
 
   useEffect(() => {
-    if (!user || !user.email) {
+    if (!user) {
       setEvents([]);
-      setPendingInvitations([]);
       setLoading(false);
       return;
     }
 
     setLoading(true);
 
-    const ownedEventsQuery = query(collection(db, 'events'), where('userId', '==', user.uid));
-    const sharedEventsQuery = query(collection(db, 'events'), where('collaborators', 'array-contains', user.email));
-    const invitationsQuery = query(collection(db, 'events'), where('pendingCollaborators', 'array-contains', user.email));
+    const q = query(collection(db, 'events'), where('userId', '==', user.uid));
     
-    let ownedEventsUnsubscribe: (() => void) | null = null;
-    let sharedEventsUnsubscribe: (() => void) | null = null;
-    let invitationsUnsubscribe: (() => void) | null = null;
-    
-    let ownedEventsData: Event[] = [];
-    let sharedEventsData: Event[] = [];
-
-    const processAndSetEvents = () => {
-        // Combine and deduplicate events
-        const allEventsMap = new Map<string, Event>();
-        [...ownedEventsData, ...sharedEventsData].forEach(event => {
-            allEventsMap.set(event.id, event);
-        });
-        const combinedEvents = Array.from(allEventsMap.values());
-        setEvents(combinedEvents);
-    };
-
-    ownedEventsUnsubscribe = onSnapshot(ownedEventsQuery, (snapshot) => {
-        ownedEventsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
-        processAndSetEvents();
-        setLoading(false); // Consider loading finished when primary data is loaded
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const userEvents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
+        setEvents(userEvents);
+        setLoading(false);
     }, (error) => {
-        console.error('Error fetching owned events:', error);
+        console.error('Error fetching events:', error);
         toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch your events.' });
         setLoading(false);
     });
 
-    sharedEventsUnsubscribe = onSnapshot(sharedEventsQuery, (snapshot) => {
-        sharedEventsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
-        processAndSetEvents();
-    }, (error) => {
-        console.error('Error fetching shared events:', error);
-        setLoading(false);
-    });
-
-    invitationsUnsubscribe = onSnapshot(invitationsQuery, (querySnapshot) => {
-      const invitations = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
-      setPendingInvitations(invitations);
-    }, (error) => {
-      console.error("Error fetching invitations:", error);
-    });
-
-    return () => {
-      if (ownedEventsUnsubscribe) ownedEventsUnsubscribe();
-      if (sharedEventsUnsubscribe) sharedEventsUnsubscribe();
-      if (invitationsUnsubscribe) invitationsUnsubscribe();
-    };
+    return () => unsubscribe();
   }, [user, toast]);
 
   const getEventById = useCallback((id: string) => {
@@ -116,7 +71,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
   }, [events]);
 
   const addEvent = async (data: EventData) => {
-    if (!user || !user.email) return;
+    if (!user) return;
     try {
       await addDoc(collection(db, "events"), {
         userId: user.uid,
@@ -125,8 +80,6 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
         expenses: [],
         incomes: [],
         donations: [],
-        collaborators: [user.email],
-        pendingCollaborators: [],
         createdAt: Timestamp.now(),
       });
       toast({
@@ -162,87 +115,6 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       throw error;
     }
   };
-
-  const addCollaborator = async (eventId: string, email: string) => {
-    try {
-        const eventRef = doc(db, "events", eventId);
-        await updateDoc(eventRef, {
-            pendingCollaborators: arrayUnion(email)
-        });
-        toast({
-            title: "Invitation Sent",
-            description: `${email} has been invited to collaborate.`,
-        });
-    } catch (error) {
-        console.error("Error adding collaborator:", error);
-        toast({
-            variant: 'destructive',
-            title: "Error",
-            description: "Could not send invitation.",
-        });
-    }
-  };
-  
-  const removeCollaborator = async (eventId: string, email: string) => {
-    try {
-      const eventRef = doc(db, "events", eventId);
-      await updateDoc(eventRef, {
-        collaborators: arrayRemove(email)
-      });
-      toast({
-        title: "Collaborator Removed",
-        description: `${email} has been removed from the event.`,
-      });
-    } catch (error) {
-      console.error("Error removing collaborator:", error);
-      toast({
-        variant: 'destructive',
-        title: "Error",
-        description: "Could not remove collaborator.",
-      });
-    }
-  };
-
-  const acceptInvitation = async (eventId: string, userEmail: string) => {
-    try {
-      const eventRef = doc(db, "events", eventId);
-      await updateDoc(eventRef, {
-        collaborators: arrayUnion(userEmail),
-      });
-       toast({
-        title: "Invitation Accepted",
-        description: "You are now collaborating on the event.",
-      });
-    } catch (error) {
-       console.error("Error accepting invitation:", error);
-        toast({
-            variant: 'destructive',
-            title: "Error",
-            description: "Could not accept the invitation.",
-        });
-    }
-  };
-
-  const declineInvitation = async (eventId: string, userEmail: string) => {
-    try {
-      const eventRef = doc(db, "events", eventId);
-      await updateDoc(eventRef, {
-        pendingCollaborators: arrayRemove(userEmail)
-      });
-       toast({
-        title: "Invitation Declined",
-        description: "You have declined the invitation.",
-      });
-    } catch (error) {
-       console.error("Error declining invitation:", error);
-        toast({
-            variant: 'destructive',
-            title: "Error",
-            description: "Could not decline the invitation.",
-        });
-    }
-  };
-
 
   const addExpense = async (eventId: string, notes: string, amount: number, createdAt: string, transactionType: TransactionType) => {
     const event = getEventById(eventId);
@@ -431,7 +303,6 @@ const deleteDonation = async (eventId: string, donationId: string) => {
 
   const value = {
     events,
-    pendingInvitations,
     loading,
     getEventById,
     addEvent,
@@ -446,10 +317,6 @@ const deleteDonation = async (eventId: string, donationId: string) => {
     addDonation,
     updateDonation,
     deleteDonation,
-    addCollaborator,
-    removeCollaborator,
-    acceptInvitation,
-    declineInvitation,
   };
 
   return <EventContext.Provider value={value}>{children}</EventContext.Provider>;
@@ -462,5 +329,3 @@ export const useEvents = () => {
   }
   return context;
 };
-
-    

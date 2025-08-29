@@ -15,7 +15,6 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ThemeSwitcher } from './ThemeSwitcher';
-import { Notifications } from './Notifications';
 
 export function Header() {
   const { user, signOut } = useAuth();
@@ -33,7 +32,6 @@ export function Header() {
             <ThemeSwitcher />
             {user && (
             <>
-              <Notifications />
               <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">

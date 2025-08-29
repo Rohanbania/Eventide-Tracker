@@ -5,7 +5,7 @@ import { useState }from 'react';
 import type { Event } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart2, IndianRupee, Wallet, Download, Landmark, Coins, Loader2, Share2 } from 'lucide-react';
+import { BarChart2, IndianRupee, Wallet, Download, Landmark, Coins, Loader2 } from 'lucide-react';
 import { ChartContainer, ChartConfig, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts"
 import jsPDF from 'jspdf';
@@ -34,26 +34,6 @@ export function ReportView({ event }: { event: Event }) {
   const [isDownloading, setIsDownloading] = useState(false);
   const { toast } = useToast();
   
-  const handleShare = () => {
-    try {
-      const eventJson = JSON.stringify(event);
-      const encodedData = btoa(encodeURIComponent(eventJson));
-      const shareUrl = `${window.location.origin}/share/event/${encodedData}`;
-      navigator.clipboard.writeText(shareUrl);
-      toast({
-        title: "Link Copied!",
-        description: "The shareable link has been copied to your clipboard.",
-      });
-    } catch (e) {
-      console.error("Failed to create share link", e);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Could not create a shareable link.",
-      });
-    }
-  };
-
   const handleDownloadPdf = async () => {
     setIsDownloading(true);
     
@@ -306,9 +286,6 @@ export function ReportView({ event }: { event: Event }) {
   return (
     <div className="space-y-8">
        <div className="flex justify-end gap-2">
-            <Button onClick={handleShare} variant="outline">
-              <Share2 className="w-4 h-4 mr-2" /> Share
-            </Button>
             <Button onClick={handleDownloadPdf} disabled={isDownloading}>
                 {isDownloading ? (
                   <>
@@ -453,5 +430,3 @@ export function ReportView({ event }: { event: Event }) {
     </div>
   );
 }
-
-    

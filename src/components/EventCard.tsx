@@ -1,7 +1,7 @@
 
 import Link from 'next/link';
 import { format, parseISO } from 'date-fns';
-import { ArrowRight, Calendar, IndianRupee, Wallet, MoreVertical, Pencil, Trash2, Landmark, Coins, Gift, User } from 'lucide-react';
+import { ArrowRight, Calendar, IndianRupee, Wallet, MoreVertical, Pencil, Trash2, Landmark, Coins, Gift } from 'lucide-react';
 import type { Event } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,8 +15,6 @@ import { toast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { AddDonationDialog } from './AddDonationDialog';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/contexts/AuthContext';
-import { Badge } from './ui/badge';
 
 interface EventCardProps {
   event: Event;
@@ -24,9 +22,6 @@ interface EventCardProps {
 
 export function EventCard({ event }: EventCardProps) {
   const { deleteEvent } = useEvents();
-  const { user } = useAuth();
-  
-  const isOwner = user?.uid === event.userId;
 
   const cashIncomes = event.incomes.filter(i => i.transactionType === 'Cash').reduce((acc, i) => acc + i.amount, 0);
   const bankIncomes = event.incomes.filter(i => i.transactionType === 'Bank').reduce((acc, i) => acc + i.amount, 0);
@@ -62,11 +57,6 @@ export function EventCard({ event }: EventCardProps) {
 
   return (
     <Card className="h-full flex flex-col transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-primary/20 relative">
-      {!isOwner && (
-        <Badge variant="secondary" className="absolute top-4 right-4 flex items-center gap-1">
-            <User className="w-3 h-3" /> Shared
-        </Badge>
-      )}
       <CardHeader className="flex-row items-start justify-between">
           <div className="flex-1">
               <CardTitle className="font-headline text-2xl tracking-wide leading-tight group">
@@ -91,30 +81,26 @@ export function EventCard({ event }: EventCardProps) {
                               <Pencil className="mr-2 h-4 w-4" /> Edit
                           </DropdownMenuItem>
                       </CreateEventDialog>
-                      {isOwner && (
-                        <>
-                        <DropdownMenuSeparator />
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive" onSelect={(e) => e.preventDefault()}>
-                                    <Trash2 className="mr-2 h-4 w-4" /> Delete
-                                </DropdownMenuItem>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        This action cannot be undone. This will permanently delete {event.name} and all its data.
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                        </>
-                      )}
+                      <DropdownMenuSeparator />
+                      <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                              <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive" onSelect={(e) => e.preventDefault()}>
+                                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                              </DropdownMenuItem>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                              <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                      This action cannot be undone. This will permanently delete {event.name} and all its data.
+                                  </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                              </AlertDialogFooter>
+                          </AlertDialogContent>
+                      </AlertDialog>
                   </DropdownMenuContent>
               </DropdownMenu>
       </CardHeader>
