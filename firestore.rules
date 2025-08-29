@@ -1,38 +1,14 @@
 
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
     match /events/{eventId} {
-      function isOwner() {
-        return request.auth.uid == resource.data.userId;
-      }
-      
-      function isCollaborator() {
-        return request.auth.token.email in resource.data.collaborators;
-      }
-      
-      function isPendingCollaborator() {
-        return request.auth.token.email in resource.data.pendingCollaborators;
-      }
-
-      function isAcceptingInvite() {
-        // User is adding themselves to collaborators
-        return request.auth.token.email in request.resource.data.collaborators &&
-               !(request.auth.token.email in resource.data.collaborators);
-      }
-      
-      function isDecliningInvite() {
-        // User is removing themselves from pending
-        return !(request.auth.token.email in request.resource.data.pendingCollaborators) &&
-               request.auth.token.email in resource.data.pendingCollaborators;
-      }
-
-      allow get: if request.auth != null && (isOwner() || isCollaborator() || isPendingCollaborator());
-      allow list: if request.auth != null;
-      allow create: if request.auth.uid == request.resource.data.userId;
-      allow update: if request.auth != null && (isOwner() || (isPendingCollaborator() && (isAcceptingInvite() || isDecliningInvite())));
-      allow delete: if request.auth != null && isOwner();
+      allow read: if request.auth != null && (request.auth.uid == resource.data.userId || request.auth.token.email in resource.data.collaborators || request.auth.token.email in resource.data.pendingCollaborators);
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && (request.auth.uid == resource.data.userId || request.auth.token.email in resource.data.collaborators || request.auth.token.email in resource.data.pendingCollaborators);
+      allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
     }
   }
 }
+
+    

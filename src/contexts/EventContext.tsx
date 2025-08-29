@@ -58,50 +58,56 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
 
     setLoading(true);
 
-    let ownedEvents: Event[] = [];
-    let sharedEvents: Event[] = [];
-
-    const updateCombinedEvents = () => {
-        const allEvents = [...ownedEvents, ...sharedEvents];
-        const uniqueEvents = Array.from(new Map(allEvents.map(event => [event.id, event])).values());
-        setEvents(uniqueEvents);
-    };
-    
     const ownedEventsQuery = query(collection(db, 'events'), where('userId', '==', user.uid));
     const sharedEventsQuery = query(collection(db, 'events'), where('collaborators', 'array-contains', user.email));
     const invitationsQuery = query(collection(db, 'events'), where('pendingCollaborators', 'array-contains', user.email));
+    
+    let ownedEventsUnsubscribe: (() => void) | null = null;
+    let sharedEventsUnsubscribe: (() => void) | null = null;
+    let invitationsUnsubscribe: (() => void) | null = null;
+    
+    let ownedEventsData: Event[] = [];
+    let sharedEventsData: Event[] = [];
 
-    const unsubOwned = onSnapshot(ownedEventsQuery, (snapshot) => {
-        ownedEvents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
-        updateCombinedEvents();
-        setLoading(false);
+    const processAndSetEvents = () => {
+        // Combine and deduplicate events
+        const allEventsMap = new Map<string, Event>();
+        [...ownedEventsData, ...sharedEventsData].forEach(event => {
+            allEventsMap.set(event.id, event);
+        });
+        const combinedEvents = Array.from(allEventsMap.values());
+        setEvents(combinedEvents);
+    };
+
+    ownedEventsUnsubscribe = onSnapshot(ownedEventsQuery, (snapshot) => {
+        ownedEventsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
+        processAndSetEvents();
+        setLoading(false); // Consider loading finished when primary data is loaded
     }, (error) => {
         console.error('Error fetching owned events:', error);
         toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch your events.' });
         setLoading(false);
     });
 
-    const unsubShared = onSnapshot(sharedEventsQuery, (snapshot) => {
-        sharedEvents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
-        updateCombinedEvents();
-        setLoading(false);
+    sharedEventsUnsubscribe = onSnapshot(sharedEventsQuery, (snapshot) => {
+        sharedEventsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
+        processAndSetEvents();
     }, (error) => {
         console.error('Error fetching shared events:', error);
         setLoading(false);
     });
-    
-    const unsubInvitations = onSnapshot(invitationsQuery, (querySnapshot) => {
+
+    invitationsUnsubscribe = onSnapshot(invitationsQuery, (querySnapshot) => {
       const invitations = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
       setPendingInvitations(invitations);
     }, (error) => {
       console.error("Error fetching invitations:", error);
     });
 
-
     return () => {
-      unsubOwned();
-      unsubShared();
-      unsubInvitations();
+      if (ownedEventsUnsubscribe) ownedEventsUnsubscribe();
+      if (sharedEventsUnsubscribe) sharedEventsUnsubscribe();
+      if (invitationsUnsubscribe) invitationsUnsubscribe();
     };
   }, [user, toast]);
 
@@ -256,7 +262,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     try {
         const eventRef = doc(db, "events", eventId);
         await updateDoc(eventRef, {
-            expenses: [newExpense, ...event.expenses]
+            expenses: arrayUnion(newExpense)
         });
         toast({ title: "Expense Added", description: "Your expense has been recorded." });
     } catch (error) {
@@ -287,11 +293,12 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     const event = getEventById(eventId);
     if (!event) return;
 
-    const updatedExpenses = event.expenses.filter(expense => expense.id !== expenseId);
+    const expenseToDelete = event.expenses.find(expense => expense.id === expenseId);
+    if (!expenseToDelete) return;
 
     try {
         const eventRef = doc(db, "events", eventId);
-        await updateDoc(eventRef, { expenses: updatedExpenses });
+        await updateDoc(eventRef, { expenses: arrayRemove(expenseToDelete) });
     } catch (error) {
         console.error("Error deleting expense:", error);
         toast({ variant: 'destructive', title: "Error", description: "Could not delete expense." });
@@ -318,7 +325,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     try {
         const eventRef = doc(db, "events", eventId);
         await updateDoc(eventRef, {
-            incomes: [newIncome, ...event.incomes]
+            incomes: arrayUnion(newIncome)
         });
         toast({ title: "Income Added", description: "Your income has been recorded." });
     } catch(error) {
@@ -348,12 +355,13 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
   const deleteIncome = async (eventId: string, incomeId: string) => {
     const event = getEventById(eventId);
     if (!event) return;
-
-    const updatedIncomes = event.incomes.filter(income => income.id !== incomeId);
+    
+    const incomeToDelete = event.incomes.find(income => income.id === incomeId);
+    if (!incomeToDelete) return;
 
     try {
         const eventRef = doc(db, "events", eventId);
-        await updateDoc(eventRef, { incomes: updatedIncomes });
+        await updateDoc(eventRef, { incomes: arrayRemove(incomeToDelete) });
     } catch (error) {
         console.error("Error deleting income:", error);
         toast({ variant: 'destructive', title: "Error", description: "Could not delete income." });
@@ -375,9 +383,8 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
 
     try {
         const eventRef = doc(db, "events", eventId);
-        const currentDonations = event.donations || [];
         await updateDoc(eventRef, {
-            donations: [newDonation, ...currentDonations]
+            donations: arrayUnion(newDonation)
         });
         toast({ title: "Donation Added", description: "Your donation has been recorded." });
     } catch (error) {
@@ -408,11 +415,12 @@ const deleteDonation = async (eventId: string, donationId: string) => {
     const event = getEventById(eventId);
     if (!event) return;
 
-    const updatedDonations = (event.donations || []).filter(donation => donation.id !== donationId);
+    const donationToDelete = (event.donations || []).find(d => d.id === donationId);
+    if (!donationToDelete) return;
 
     try {
         const eventRef = doc(db, "events", eventId);
-        await updateDoc(eventRef, { donations: updatedDonations });
+        await updateDoc(eventRef, { donations: arrayRemove(donationToDelete) });
         toast({ title: "Donation Deleted", description: "The donation has been removed." });
     } catch (error) {
         console.error("Error deleting donation:", error);
@@ -454,3 +462,5 @@ export const useEvents = () => {
   }
   return context;
 };
+
+    
