@@ -13,8 +13,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AddIncomeDialog } from './AddIncomeDialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 import { toast } from '@/hooks/use-toast';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
 export function IncomeTracker({ event, isReadOnly = false }: { event: Event, isReadOnly?: boolean }) {
   const { deleteIncome } = useEvents();
@@ -32,9 +30,8 @@ export function IncomeTracker({ event, isReadOnly = false }: { event: Event, isR
 
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+    <div className="space-y-8">
       {!isReadOnly && (
-        <div className="lg:col-span-1">
           <Card>
             <CardHeader>
               <CardTitle className="font-headline">Record Income</CardTitle>
@@ -46,9 +43,8 @@ export function IncomeTracker({ event, isReadOnly = false }: { event: Event, isR
               </AddIncomeDialog>
             </CardContent>
           </Card>
-        </div>
       )}
-      <div className={isReadOnly ? "lg:col-span-3" : "lg:col-span-2"}>
+      <div>
         <h3 className="text-2xl font-headline mb-4 flex items-center gap-2">
             <IndianRupee className="w-6 h-6" /> Income Entries
         </h3>

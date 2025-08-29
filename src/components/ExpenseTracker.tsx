@@ -13,9 +13,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 import { toast } from '@/hooks/use-toast';
 import { AddExpenseDialog } from './AddExpenseDialog';
-import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
-import { Tooltip, TooltipProvider, TooltipTrigger } from './ui/tooltip';
-import { TooltipContent } from '@radix-ui/react-tooltip';
 
 export function ExpenseTracker({ event, isReadOnly = false }: { event: Event, isReadOnly?: boolean }) {
   const { deleteExpense } = useEvents();
@@ -32,9 +29,8 @@ export function ExpenseTracker({ event, isReadOnly = false }: { event: Event, is
   const totalExpenses = event.expenses.reduce((sum, expense) => sum + expense.amount, 0);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+    <div className="space-y-8">
       {!isReadOnly && (
-        <div className="lg:col-span-1">
           <Card>
             <CardHeader>
               <CardTitle className="font-headline">Record Expense</CardTitle>
@@ -46,9 +42,8 @@ export function ExpenseTracker({ event, isReadOnly = false }: { event: Event, is
               </AddExpenseDialog>
             </CardContent>
           </Card>
-        </div>
       )}
-      <div className={isReadOnly ? "lg:col-span-3" : "lg:col-span-2"}>
+      <div>
         <h3 className="text-2xl font-headline mb-4 flex items-center gap-2">
             <IndianRupee className="w-6 h-6" /> Expense Entries
         </h3>
