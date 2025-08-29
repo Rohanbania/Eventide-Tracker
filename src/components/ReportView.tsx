@@ -292,6 +292,13 @@ export function ReportView({ event }: { event: Event }) {
     return Math.max(minWidth, calculatedWidth);
   }
 
+  const formatXAxisTick = (value: string) => {
+    if (value.length > 15) {
+      return `${value.substring(0, 15)}...`;
+    }
+    return value;
+  };
+
   return (
     <div className="space-y-8">
        <div className="flex justify-end gap-2">
@@ -383,7 +390,7 @@ export function ReportView({ event }: { event: Event }) {
             <TabsContent value="income">
               {incomeChartData.length > 0 ? (
                 <div className="overflow-x-auto py-2">
-                   <ChartContainer config={chartConfig} style={{ minHeight: '450px', width: '100%', minWidth: `${getChartWidth(incomeChartData.length)}px` }}>
+                   <ChartContainer config={chartConfig} style={{ minHeight: '450px', width: `${getChartWidth(incomeChartData.length)}px` }}>
                       <ResponsiveContainer>
                         <BarChart
                           accessibilityLayer
@@ -397,6 +404,7 @@ export function ReportView({ event }: { event: Event }) {
                             tickMargin={10}
                             axisLine={false}
                             interval={0}
+                            tickFormatter={formatXAxisTick}
                             dy={10}
                             style={{ fontSize: '12px' }}
                           />
@@ -416,7 +424,7 @@ export function ReportView({ event }: { event: Event }) {
             <TabsContent value="expense">
               {expenseChartData.length > 0 ? (
                 <div className="overflow-x-auto py-2">
-                    <ChartContainer config={chartConfig} style={{ minHeight: '450px', width: '100%', minWidth: `${getChartWidth(expenseChartData.length)}px` }}>
+                    <ChartContainer config={chartConfig} style={{ minHeight: '450px', width: `${getChartWidth(expenseChartData.length)}px` }}>
                     <ResponsiveContainer>
                       <BarChart
                         accessibilityLayer
@@ -430,6 +438,7 @@ export function ReportView({ event }: { event: Event }) {
                           tickMargin={10}
                           axisLine={false}
                           interval={0}
+                          tickFormatter={formatXAxisTick}
                           dy={10}
                           style={{ fontSize: '12px' }}
                         />
@@ -452,3 +461,4 @@ export function ReportView({ event }: { event: Event }) {
     </div>
   );
 }
+
