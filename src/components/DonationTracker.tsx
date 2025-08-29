@@ -54,8 +54,8 @@ export function DonationTracker({ event, isReadOnly = false }: { event: Event, i
                 <TableRow>
                   <TableHead>Donor</TableHead>
                   <TableHead>Type</TableHead>
-                  <TableHead>Details / Amount</TableHead>
                   <TableHead>Date</TableHead>
+                  <TableHead className="text-right">Details / Amount</TableHead>
                   {!isReadOnly && <TableHead className="w-[50px]"></TableHead>}
                 </TableRow>
               </TableHeader>
@@ -70,13 +70,13 @@ export function DonationTracker({ event, isReadOnly = false }: { event: Event, i
                             {donation.donationType}
                         </Badge>
                     </TableCell>
-                    <TableCell className="max-w-[150px] truncate">
+                    <TableCell className="text-muted-foreground whitespace-nowrap">{format(new Date(donation.createdAt), 'MMM d, yyyy')}</TableCell>
+                    <TableCell className="text-right max-w-[150px] truncate">
                         {donation.donationType === 'Goods' 
                             ? <span className="text-sm text-muted-foreground">{donation.goods}</span>
-                            : <span className="font-mono text-green-600">₹{donation.amount?.toFixed(2)}</span>
+                            : <span className="font-mono text-green-600 whitespace-nowrap">₹{donation.amount?.toFixed(2)}</span>
                         }
                     </TableCell>
-                    <TableCell className="text-muted-foreground whitespace-nowrap">{format(new Date(donation.createdAt), 'MMM d, yyyy')}</TableCell>
                     {!isReadOnly && (
                       <TableCell className="text-right">
                         <DropdownMenu>

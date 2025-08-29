@@ -116,7 +116,7 @@ export function ExpenseTracker({ event, isReadOnly = false }: { event: Event, is
               {event.expenses.length > 0 && (
                   <TableFooter>
                       <TableRow>
-                          <TableCell colSpan={isReadOnly ? 3 : 4} className="font-bold text-base md:text-lg">Total Expenses</TableCell>
+                          <TableCell colSpan={isReadOnly ? 3 : 4} className="text-right font-bold text-base md:text-lg">Total Expenses</TableCell>
                           <TableCell className="text-right font-bold font-mono text-base md:text-lg text-destructive/80 whitespace-nowrap">₹{totalExpenses.toFixed(2)}</TableCell>
                           {!isReadOnly && <TableCell></TableCell>}
                       </TableRow>
