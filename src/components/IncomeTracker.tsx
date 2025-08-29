@@ -117,7 +117,7 @@ export function IncomeTracker({ event, isReadOnly = false }: { event: Event, isR
                {event.incomes.length > 0 && (
                   <TableFooter>
                       <TableRow>
-                          <TableCell colSpan={isReadOnly ? 3: 4} className="text-right font-bold text-base md:text-lg">Total Income</TableCell>
+                          <TableCell colSpan={3} className="text-right font-bold text-base md:text-lg">Total Income</TableCell>
                           <TableCell className="text-right font-bold font-mono text-base md:text-lg whitespace-nowrap text-green-600">₹{totalIncome.toFixed(2)}</TableCell>
                           {!isReadOnly && <TableCell></TableCell>}
                       </TableRow>
