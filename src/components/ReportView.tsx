@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState }from 'react';
+import { useState, useRef }from 'react';
 import type { Event } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,15 +9,16 @@ import { BarChart2, IndianRupee, Wallet, Download, Landmark, Coins, Loader2 } fr
 import { ChartContainer, ChartConfig, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts"
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import html2canvas from 'html2canvas';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { ToastAction } from '@/components/ui/toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ReportPDF } from './ReportPDF';
 
 
 const formatCurrency = (amount: number) => {
-    return `Rs ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `₹${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
 const chartConfig = {
@@ -35,201 +36,38 @@ const chartConfig = {
 export function ReportView({ event }: { event: Event }) {
   const [isDownloading, setIsDownloading] = useState(false);
   const { toast } = useToast();
+  const pdfRef = useRef<HTMLDivElement>(null);
   
   const handleDownloadPdf = async () => {
     setIsDownloading(true);
+    const reportElement = pdfRef.current;
+    if (!reportElement) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not find the report content to download.",
+        });
+        setIsDownloading(false);
+        return;
+    }
     
     try {
-        const doc = new jsPDF();
-        
-        // Noto Sans font data (replace with actual Base64 data)
-        // This is a placeholder. You would fetch or have the Base64 string of the font here.
-        // For this example, we'll assume it's loaded and skip the font embedding for brevity.
-        // doc.addFileToVFS('NotoSans-Regular.ttf', notoSansRegularBase64);
-        // doc.addFont('NotoSans-Regular.ttf', 'NotoSans', 'normal');
-        // doc.setFont('NotoSans');
-
-        const monetaryDonations = event.donations?.filter(d => d.donationType === 'Cash' || d.donationType === 'Bank') || [];
-        
-        const cashIncomes = event.incomes.filter(i => i.transactionType === 'Cash').reduce((acc, i) => acc + i.amount, 0) + monetaryDonations.filter(d => d.donationType === 'Cash').reduce((acc, d) => acc + (d.amount || 0), 0);
-        const bankIncomes = event.incomes.filter(i => i.transactionType === 'Bank').reduce((acc, i) => acc + i.amount, 0) + monetaryDonations.filter(d => d.donationType === 'Bank').reduce((acc, d) => acc + (d.amount || 0), 0);
-        const totalIncome = cashIncomes + bankIncomes;
-
-        const cashExpenses = event.expenses.filter(e => e.transactionType === 'Cash').reduce((acc, e) => acc + e.amount, 0);
-        const bankExpenses = event.expenses.filter(e => e.transactionType === 'Bank').reduce((acc, e) => acc + e.amount, 0);
-        const totalExpenses = cashExpenses + bankExpenses;
-        
-        const cashBalance = cashIncomes - cashExpenses;
-        const bankBalance = bankIncomes - bankExpenses;
-        const netProfit = totalIncome - totalExpenses;
-
-        const allIncomes = [
-            ...event.incomes.map(i => ({...i, type: i.transactionType})),
-            ...monetaryDonations.map(d => ({
-                ...d,
-                source: `${d.source} (Donation)`,
-                amount: d.amount || 0,
-                type: d.donationType as 'Cash' | 'Bank'
-            }))
-        ].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-
-        let finalY = 0;
-
-        // Header
-        const accentColor = "#73A9AD"; // Muted Teal from theme
-        doc.setFillColor(accentColor);
-        doc.setDrawColor(accentColor);
-
-        const iconPaths = [
-          "M10 3L8 8L3 10L8 12L10 17L12 12L17 10L12 8L10 3Z",
-          "M21 3L19.5 6.5L16 8L19.5 9.5L21 13L22.5 9.5L26 8L22.5 6.5L21 3Z"
-        ];
-        
-        const scale = 0.35;
-        const offsetX = 15;
-        const offsetY = 18;
-
-        doc.saveGraphicsState();
-        doc.setGState(new (doc as any).GState({opacity: 1}));
-        doc.setLineWidth(0.5);
-        
-        iconPaths.forEach(pathData => {
-            const commands = pathData.match(/[A-Z][^A-Z]*/g) || [];
-            
-            commands.forEach((command, index) => {
-                const type = command[0];
-                const points = command.substring(1).trim().split(/[ ,L]/).map(p => parseFloat(p));
-
-                const transformedPoints = [];
-                for(let i=0; i<points.length; i+=2) {
-                    transformedPoints.push(points[i] * scale + offsetX);
-                    transformedPoints.push(points[i+1] * scale + offsetY);
-                }
-
-                if (type === 'M' && index === 0) {
-                    doc.moveTo(transformedPoints[0], transformedPoints[1]);
-                } else if (type === 'L') { 
-                    doc.lineTo(transformedPoints[0], transformedPoints[1]);
-                } else if (type === 'Z') {
-                    doc.close();
-                } else {
-                     doc.moveTo(transformedPoints[0], transformedPoints[1]);
-                }
-            });
-             doc.fill();
+        const canvas = await html2canvas(reportElement, {
+            scale: 2,
+            useCORS: true,
         });
-        doc.restoreGraphicsState();
         
-        doc.setFontSize(22);
-        doc.setTextColor(accentColor);
-        doc.text("Eventide Tracker", 26, 22);
-
-        // Report Title
-        doc.setFontSize(16);
-        doc.setTextColor(40, 40, 40);
-        doc.text(`Financial Report: ${event.name}`, 14, 40);
-        doc.setFontSize(12);
-        doc.setTextColor(127, 140, 141);
-        doc.text(`Event Date: ${format(new Date(event.date), 'MMMM d, yyyy')}`, 14, 48);
-
-        finalY = 55;
-
-        const summaryFooter = [
-          ['Total', formatCurrency(totalIncome), formatCurrency(totalExpenses), formatCurrency(netProfit)],
-        ];
-
-        if (cashBalance !== 0 || bankBalance !== 0) {
-            summaryFooter.push(
-                 [{ content: `Cash Balance: ${formatCurrency(cashBalance)}`, colSpan: 2, styles: { fontStyle: 'normal', fillColor: [245, 245, 245] } }, { content: `Bank Balance: ${formatCurrency(bankBalance)}`, colSpan: 2, styles: { fontStyle: 'normal', fillColor: [245, 245, 245] } }],
-            )
-        }
-
-        autoTable(doc, {
-            startY: finalY,
-            head: [['Category', 'Income', 'Expenses', 'Balance']],
-            body: [
-                ['Cash', formatCurrency(cashIncomes), formatCurrency(cashExpenses), formatCurrency(cashBalance)],
-                ['Bank', formatCurrency(bankIncomes), formatCurrency(bankExpenses), formatCurrency(bankBalance)],
-            ],
-            foot: summaryFooter,
-            theme: 'striped',
-            headStyles: { fillColor: [208, 191, 255], textColor: [40, 40, 40], fontStyle: 'bold' },
-            footStyles: { fillColor: [245, 245, 245], textColor: [40, 40, 40], fontStyle: 'bold'  }
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({
+            orientation: 'p',
+            unit: 'px',
+            format: [canvas.width, canvas.height]
         });
 
-        finalY = (doc as any).lastAutoTable.finalY + 15;
+        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
         
-        const tableConfig = {
-          theme: 'striped' as const,
-          headStyles: { fillColor: [208, 191, 255], textColor: [40, 40, 40], fontStyle: 'bold' as const },
-          footStyles: { fillColor: [245, 245, 245], textColor: [40, 40, 40], fontStyle: 'bold' as const },
-          didDrawPage: (data: any) => {
-            doc.setFontSize(10);
-            doc.setTextColor(127, 140, 141);
-            doc.text(`Page ${doc.internal.getNumberOfPages()}`, data.settings.margin.left, doc.internal.pageSize.height - 10);
-          }
-        };
-        
-        if (allIncomes.length > 0) {
-            if ((doc.internal.pageSize.height - finalY) < 50) { // Check if new page is needed
-                doc.addPage();
-                finalY = 20;
-            }
-            doc.setFontSize(14);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Income Breakdown', 14, finalY);
-            autoTable(doc, {
-            ...tableConfig,
-            startY: finalY + 2,
-            head: [['Source', 'Date', 'Type', 'Amount']],
-            body: allIncomes.map(i => [i.source, format(new Date(i.createdAt), 'MMM d, yyyy'), i.type, formatCurrency(i.amount)]),
-            foot: [['Total Income', '', '', formatCurrency(totalIncome)]],
-            });
-            finalY = (doc as any).lastAutoTable.finalY + 15;
-        }
-
-        if (event.expenses.length > 0) {
-            if ((doc.internal.pageSize.height - finalY) < 50) { // Check if new page is needed
-                doc.addPage();
-                finalY = 20;
-            }
-            doc.setFontSize(14);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Expense Breakdown', 14, finalY);
-            autoTable(doc, {
-            ...tableConfig,
-            startY: finalY + 2,
-            head: [['Notes', 'Created At', 'Type', 'Amount']],
-            body: event.expenses.map(e => [e.notes || '-', format(new Date(e.createdAt), 'MMM d, yyyy'), e.transactionType, formatCurrency(e.amount)]),
-            foot: [['Total Expenses', '', '', formatCurrency(totalExpenses)]],
-            });
-            finalY = (doc as any).lastAutoTable.finalY + 15;
-        }
-
-        if (event.donations && event.donations.length > 0) {
-             if ((doc.internal.pageSize.height - finalY) < 50) { // Check if new page is needed
-                doc.addPage();
-                finalY = 20;
-            }
-            doc.setFontSize(14);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Donation Breakdown', 14, finalY);
-            autoTable(doc, {
-                ...tableConfig,
-                startY: finalY + 2,
-                head: [['Donor', 'Date', 'Type', 'Details/Amount']],
-                body: event.donations.map(d => [
-                    d.source,
-                    format(new Date(d.createdAt), 'MMM d, yyyy'),
-                    d.donationType,
-                    d.donationType === 'Goods' ? d.goods : formatCurrency(d.amount || 0)
-                ]),
-            });
-        }
-        
-        const pdfDataUri = doc.output('datauristring');
-        doc.save(`report-${event.name.toLowerCase().replace(/ /g, '-')}.pdf`);
+        const pdfDataUri = pdf.output('datauristring');
+        pdf.save(`report-${event.name.toLowerCase().replace(/ /g, '-')}.pdf`);
         
         toast({
             title: "Download Complete",
@@ -238,16 +76,17 @@ export function ReportView({ event }: { event: Event }) {
               <ToastAction altText="View PDF" onClick={() => window.open(pdfDataUri, '_blank')}>View PDF</ToastAction>
             ),
         });
-      } catch (error) {
+
+    } catch (error) {
         console.error("PDF generation failed:", error);
         toast({
           variant: "destructive",
           title: "Error",
           description: "Failed to generate the PDF report."
         });
-      } finally {
+    } finally {
         setIsDownloading(false);
-      }
+    }
   };
   
   const monetaryDonations = event.donations?.filter(d => d.donationType === 'Cash' || d.donationType === 'Bank') || [];
@@ -301,6 +140,18 @@ export function ReportView({ event }: { event: Event }) {
 
   return (
     <div className="space-y-8">
+       {/* Staging area for PDF rendering */}
+       <div className="absolute -left-[9999px] top-auto w-[800px]">
+          <div ref={pdfRef}>
+            <ReportPDF 
+              event={event}
+              summary={{ totalIncome, totalExpenses, cashBalance, bankBalance, netProfit, cashIncomes, bankIncomes, cashExpenses, bankExpenses }}
+              allIncomes={allIncomes}
+              formatCurrency={formatCurrency}
+            />
+          </div>
+       </div>
+
        <div className="flex justify-end gap-2">
             <Button onClick={handleDownloadPdf} disabled={isDownloading}>
                 {isDownloading ? (
@@ -406,6 +257,8 @@ export function ReportView({ event }: { event: Event }) {
                             interval={0}
                             tickFormatter={formatXAxisTick}
                             dy={10}
+                            angle={-45}
+                            textAnchor="end"
                             style={{ fontSize: '12px' }}
                           />
                           <YAxis tickFormatter={(value) => `₹${value / 1000}k`} />
@@ -440,6 +293,8 @@ export function ReportView({ event }: { event: Event }) {
                           interval={0}
                           tickFormatter={formatXAxisTick}
                           dy={10}
+                          angle={-45}
+                          textAnchor="end"
                           style={{ fontSize: '12px' }}
                         />
                         <YAxis tickFormatter={(value) => `₹${value / 1000}k`} />
@@ -462,3 +317,4 @@ export function ReportView({ event }: { event: Event }) {
   );
 }
 
+    
